@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
+import { Inter, Playfair_Display, JetBrains_Mono, Geist } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "./components/SmoothScroll";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -30,10 +34,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-theme="dark"
       suppressHydrationWarning
-      className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", inter.variable, playfair.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
     >
       <head>
-        <script
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{const t=localStorage.getItem('nexora-theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`,
           }}

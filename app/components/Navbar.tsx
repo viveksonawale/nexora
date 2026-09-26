@@ -59,11 +59,17 @@ export function Navbar() {
     { label: "About", href: "/about", icon: Info },
   ];
 
+  const isHackathonSubpage = pathname.startsWith("/hackathons/") && pathname.split("/").filter(Boolean).length >= 2;
+  const isHiddenOnSubpage = isHackathonSubpage && scrolled;
+  const isDarkHeroTop = (pathname === "/" || isHackathonSubpage) && !scrolled;
+
   return (
     <>
       <header
         className={`fixed top-0 inset-x-0 z-50 flex justify-center transition-all duration-300 ease-out ${
-          scrolled
+          isHiddenOnSubpage ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+        } ${
+          scrolled && !isHiddenOnSubpage
             ? "pt-3 px-4 pointer-events-none"
             : "pt-0 px-0"
         }`}
@@ -81,19 +87,23 @@ export function Navbar() {
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#F97316] to-[#EA580C] flex items-center justify-center text-[#121110] font-display font-extrabold text-sm shadow-md group-hover:scale-105 transition-transform">
                 N
               </div>
-              <span className="font-display font-extrabold text-xl tracking-tight text-[var(--text-primary)]">
+              <span className={`font-display font-extrabold text-xl tracking-tight transition-colors ${isDarkHeroTop ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                 Nexora
               </span>
             </Link>
           </div>
 
           {/* Center: Navigation Links */}
-          <div className="hidden md:flex flex-none items-center gap-2">
+          <div className="hidden md:flex flex-none items-center gap-3">
             {navLinks.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="px-4 py-2 rounded-full text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-inverse)]/5 transition-all"
+                className={`px-5 py-2.5 rounded-full text-base font-semibold tracking-wide transition-all ${
+                  isDarkHeroTop
+                    ? "text-white/95 hover:text-white hover:bg-white/10"
+                    : "text-[var(--text-primary)] hover:text-[#F97316] hover:bg-[var(--bg-inverse)]/5"
+                }`}
               >
                 {item.label}
               </Link>
@@ -104,17 +114,23 @@ export function Navbar() {
           <div className="flex-1 flex justify-end items-center gap-4">
             <button
               onClick={toggleTheme}
-              className="hidden md:flex p-2.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-inverse)]/5 transition-all rounded-full cursor-pointer"
+              className={`hidden md:flex p-2.5 transition-all rounded-full cursor-pointer ${
+                isDarkHeroTop
+                  ? "text-white/90 hover:text-white hover:bg-white/10"
+                  : "text-[var(--text-primary)] hover:text-[#F97316] hover:bg-[var(--bg-inverse)]/5"
+              }`}
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
             </button>
             
-            <button onClick={() => setIsAuthOpen(true)} className="inline-block">
-              <ShinyButton variant="primary" size="md">
-                Sign Up
-              </ShinyButton>
-            </button>
+            <ShinyButton 
+              variant="primary" 
+              size="md"
+              onClick={() => setIsAuthOpen(true)}
+            >
+              Sign Up
+            </ShinyButton>
           </div>
         </nav>
       </header>

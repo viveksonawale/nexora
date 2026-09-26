@@ -82,7 +82,7 @@ export function FeaturesGrid() {
               Seamless Hackathon <span className="text-[#F97316]">Management</span>
             </h3>
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
-              Handle registrations, team formation, scheduling, and announcements — all in one place. Built for colleges and large scale events.
+              Handle registrations, team formation, scheduling, and announcements, all in one place. Built for colleges and large scale events.
             </p>
             <a href="#" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />

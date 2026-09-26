@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Navbar } from "../components/Navbar";
 import { ShinyButton } from "../components/ShinyButton";
+import { NorButton } from "../../components/ui/nor-button";
 import {
   Search,
   SlidersHorizontal,
@@ -44,7 +45,7 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
       {/* ── Top Row: Title, College & Social Links ── */}
       <div className="p-6 pb-4 flex items-start justify-between gap-4 relative z-10">
         <div className="min-w-0">
-          <h3 className="font-display text-2xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors leading-tight">
+          <h3 className="font-sans text-2xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors leading-tight">
             {h.name}
           </h3>
           <p className="font-sans text-sm font-medium text-[var(--text-secondary)] mt-1 truncate">
@@ -74,10 +75,10 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
       {/* ── Middle Row: Theme & Participants (Orange-accented Strip) ── */}
       <div className="px-6 py-4 bg-[var(--bg-canvas)]/60 dark:bg-[var(--bg-canvas)]/40 border-y border-[var(--border)] flex items-center justify-between gap-4 relative z-10">
         <div>
-          <div className="font-mono text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5">
+          <div className="font-sans text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest mb-1.5">
             THEME
           </div>
-          <span className="inline-block font-mono text-xs font-semibold px-4 py-1.5 rounded-full border border-[#F97316]/30 text-[#F97316] bg-[#F97316]/10 uppercase tracking-wider shadow-xs">
+          <span className="inline-block font-sans text-xs font-semibold px-4 py-1.5 rounded-full border border-[#F97316]/30 text-[#F97316] bg-[#F97316]/10 uppercase tracking-wider shadow-xs">
             {h.theme}
           </span>
         </div>
@@ -93,7 +94,7 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
               />
             ))}
           </div>
-          <span className="font-mono text-sm font-bold text-[#F97316] whitespace-nowrap">
+          <span className="font-sans text-sm font-bold text-[#F97316] whitespace-nowrap">
             +{h.participants} participating
           </span>
         </div>
@@ -102,20 +103,20 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
       {/* ── Bottom Row: Status Tags & Apply Now ── */}
       <div className="p-6 pt-5 flex items-center justify-between gap-3 relative z-10">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border)] text-[var(--text-secondary)] uppercase tracking-wider">
+          <span className="font-sans text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border)] text-[var(--text-secondary)] uppercase tracking-wider">
             {h.mode}
           </span>
-          <span className="font-mono text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] uppercase tracking-wider">
+          <span className="font-sans text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[#F97316]/10 border border-[#F97316]/30 text-[#F97316] uppercase tracking-wider">
             {h.status}
           </span>
-          <span className="font-mono text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border)] text-[var(--text-secondary)] uppercase tracking-wider">
+          <span className="font-sans text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border)] text-[var(--text-secondary)] uppercase tracking-wider">
             {h.starts}
           </span>
         </div>
 
-        <button className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-semibold text-sm shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap">
+        <NorButton className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-semibold text-sm shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap">
           Apply now
-        </button>
+        </NorButton>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ export default function AboutPage() {
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute -left-6 -top-6 text-6xl text-[#F97316]/20 font-serif">"</div>
             <p className="font-sans text-xl md:text-2xl text-[var(--text-secondary)] leading-relaxed font-medium relative z-10">
-              We made this project specifically for colleges who need to easily handle and organize large-scale hackathons. Nexora is designed to make the entire process—from registrations to results—seamless and beautiful.
+              We made this project specifically for colleges who need to easily handle and organize large-scale hackathons. Nexora is designed to make the entire process, from registrations to results, seamless and beautiful.
             </p>
             <div className="absolute -right-6 -bottom-8 text-6xl text-[#F97316]/20 font-serif">"</div>
           </div>
