@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-canvas: #faf8f4;
+  --bg-elevated: #f1ede4;
+  --bg-inverse: #14130f;
+  --text-primary: #14130f;
+  --text-secondary: #5c584d;
+  --text-inverse: #faf8f4;
+  --accent: #F97316;
+  --accent-soft: #f3e2d8;
+  --border: #e3ddd0;
+}
+
+:root[data-theme="dark"] {
+  --bg-canvas: #121110;
+  --bg-elevated: #1c1a17;
+  --bg-inverse: #faf8f4;
+  --text-primary: #f1ede4;
+  --text-secondary: #a39e8f;
+  --text-inverse: #14130f;
+  --accent: #F97316;
+  --accent-soft: #2b1f18;
+  --border: #2a2722;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-canvas: var(--bg-canvas);
+  --color-elevated: var(--bg-elevated);
+  --color-inverse: var(--bg-inverse);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-inverse: var(--text-inverse);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-border: var(--border);
+  --font-sans: var(--font-inter), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-display: var(--font-inter), sans-serif;
+  --font-accent: var(--font-playfair), serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  transition: background-color 0.5s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* ── Hero Background Cross-fade Transitions ── */
+/* Both images sit stacked; we transition their opacity in sync */
+.hero-img-dark,
+.hero-img-light,
+.hero-overlay-dark,
+.hero-overlay-light-scrim {
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity;
+}
+
+/* --- DARK default state --- */
+.hero-img-dark           { opacity: 0.45; }
+.hero-img-light          { opacity: 0;    }
+.hero-overlay-dark       { opacity: 1;    }
+.hero-overlay-light-scrim { opacity: 0;   }
+
+/* --- LIGHT state --- */
+/* Dark image fades out, light image fades in */
+:root[data-theme="light"] .hero-img-dark    { opacity: 0;    }
+:root[data-theme="light"] .hero-img-light   { opacity: 0.88; }
+
+/* Keep the dark overlay at ~40% so text stays readable over the bright office image */
+:root[data-theme="light"] .hero-overlay-dark { opacity: 0.42; }
+
+/* Light scrim: extra soft warm veil only in light mode to help heading contrast */
+:root[data-theme="light"] .hero-overlay-light-scrim { opacity: 1; }
+
+/* ── Eyebrow badge beam: brighter in light mode ── */
+:root[data-theme="light"] .eyebrow-beam {
+  background-image: conic-gradient(
+    from 0deg,
+    transparent 0 60%,
+    #EA580C 80%,
+    #F97316 90%,
+    transparent 100%
+  );
+  opacity: 1;
+}
+
+@keyframes shine-sweep {
+  0% {
+    transform: translateX(-160%) skewX(-25deg);
+  }
+
+  100% {
+    transform: translateX(260%) skewX(-25deg);
+  }
+}
+
+@keyframes shine-load {
+  0% {
+    transform: translateX(-160%) skewX(-25deg);
+  }
+
+  35% {
+    transform: translateX(260%) skewX(-25deg);
+  }
+
+  100% {
+    transform: translateX(260%) skewX(-25deg);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.3), 0 0 35px rgba(249, 115, 22, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(249, 115, 22, 0.6), 0 0 55px rgba(249, 115, 22, 0.3);
+  }
+}
+
+@keyframes border-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-shine-sweep {
+  animation: shine-sweep 0.75s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-shine-load {
+  animation: shine-load 4.5s cubic-bezier(0.4, 0, 0.2, 1) 0.6s infinite;
+}
+
+.animate-border-loop {
+  animation: border-rotate 3s linear infinite;
 }
