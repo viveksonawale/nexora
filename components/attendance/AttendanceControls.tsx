@@ -3,10 +3,11 @@ import { SpotlightCard } from "@/app/components/SpotlightCard";
 
 interface AttendanceControlsProps {
   status: "ACTIVE" | "PAUSED" | "ENDED";
+  hasStarted: boolean;
   onStatusChange: (status: "ACTIVE" | "PAUSED" | "ENDED") => void;
 }
 
-export function AttendanceControls({ status, onStatusChange }: AttendanceControlsProps) {
+export function AttendanceControls({ status, hasStarted, onStatusChange }: AttendanceControlsProps) {
   return (
     <SpotlightCard spotlightColor="rgba(249, 115, 22, 0.15)" className="group p-8 border-[var(--border)] mb-5 rounded-3xl bg-[var(--bg-elevated)]/40 backdrop-blur-md hover:border-[#F97316]/50 hover:bg-[var(--bg-elevated)]/60 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-1">
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#F97316]/15 transition-colors duration-500 pointer-events-none" />
@@ -21,7 +22,7 @@ export function AttendanceControls({ status, onStatusChange }: AttendanceControl
             variant="primary"
             onClick={() => onStatusChange("ACTIVE")}
           >
-            Start Session
+            {hasStarted ? "Resume Session" : "Start Session"}
           </ShinyButton>
         )}
 
@@ -34,13 +35,22 @@ export function AttendanceControls({ status, onStatusChange }: AttendanceControl
           </ShinyButton>
         )}
 
-        {status !== "ENDED" && (
+        {hasStarted && status !== "ENDED" && (
           <ShinyButton
             variant="outline"
             onClick={() => onStatusChange("ENDED")}
             className="hover:!border-red-500/50 hover:!bg-red-500/10 hover:text-red-500"
           >
             End Session
+          </ShinyButton>
+        )}
+
+        {status === "ENDED" && (
+          <ShinyButton
+            variant="primary"
+            onClick={() => onStatusChange("ACTIVE")}
+          >
+            Start New Session
           </ShinyButton>
         )}
         </div>

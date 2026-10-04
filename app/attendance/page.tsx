@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AttendanceHeader } from "@/components/attendance/AttendanceHeader";
 import { AttendanceMetrics } from "@/components/attendance/AttendanceMetrics";
 import { QRDisplay } from "@/components/attendance/QRDisplay";
@@ -8,11 +8,31 @@ import { SessionStatus } from "@/components/attendance/SessionStatus";
 import { AttendanceActivity } from "@/components/attendance/AttendanceActivity";
 import { AttendanceControls } from "@/components/attendance/AttendanceControls";
 import { Navbar } from "@/app/components/Navbar";
-
-type Status = "ACTIVE" | "PAUSED" | "ENDED";
+import { getSession, startSession, updateSessionStatus, SessionStatus as TSessionStatus } from "@/lib/attendance/attendance-session";
 
 export default function AttendancePage() {
-  const [status, setStatus] = useState<Status>("PAUSED");
+  const [status, setStatus] = useState<TSessionStatus>("PAUSED");
+  const [sessionId, setSessionId] = useState<string>("");
+
+  useEffect(() => {
+    // Initialize session from storage
+    const current = getSession();
+    if (current) {
+      setStatus(current.status);
+      setSessionId(current.id);
+    }
+  }, []);
+
+  const handleStatusChange = (newStatus: TSessionStatus) => {
+    setStatus(newStatus);
+    if (newStatus === "ACTIVE" && (!sessionId || status === "ENDED")) {
+      const newId = `SESSION_${Date.now()}`;
+      setSessionId(newId);
+      startSession(newId);
+    } else {
+      updateSessionStatus(newStatus);
+    }
+  };
 
   // Mock data for prototype
   const registeredCount = 142;
@@ -33,7 +53,8 @@ export default function AttendancePage() {
 
           <AttendanceControls
             status={status}
-            onStatusChange={setStatus}
+            hasStarted={!!sessionId}
+            onStatusChange={handleStatusChange}
           />
 
           <AttendanceMetrics
@@ -44,7 +65,7 @@ export default function AttendancePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* Main QR Area */}
             <div className="lg:col-span-2">
-              <QRDisplay status={status} />
+              <QRDisplay status={status} sessionId={sessionId} />
             </div>
 
             {/* Sidebar */}

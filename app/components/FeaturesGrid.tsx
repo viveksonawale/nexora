@@ -201,7 +201,7 @@ export function FeaturesGrid() {
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
               Track participant attendance seamlessly with QR codes, real-time analytics, and instant reports.
             </p>
-            <a href="/attendance" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
+            <a href="/attendance/select" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />
             </a>
           </div>

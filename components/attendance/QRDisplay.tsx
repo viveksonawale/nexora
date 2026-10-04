@@ -7,19 +7,20 @@ import { SpotlightCard } from "@/app/components/SpotlightCard";
 
 interface QRDisplayProps {
   status: "ACTIVE" | "PAUSED" | "ENDED";
+  sessionId?: string;
 }
 
-export function QRDisplay({ status }: QRDisplayProps) {
-  const [countdown, setCountdown] = useState(30);
+export function QRDisplay({ status, sessionId }: QRDisplayProps) {
+  const [countdown, setCountdown] = useState(5);
   const [rotation, setRotation] = useState(1);
   const [qrValue, setQrValue] = useState("");
 
   useEffect(() => {
     // Generate initial QR value when status becomes active
-    if (status === "ACTIVE" && qrValue === "") {
-      setQrValue(generateDemoQRValue(rotation));
+    if (status === "ACTIVE" && qrValue === "" && sessionId) {
+      setQrValue(generateDemoQRValue(sessionId, rotation));
     }
-  }, [status, qrValue, rotation]);
+  }, [status, qrValue, rotation, sessionId]);
 
   useEffect(() => {
     if (status !== "ACTIVE") return;
@@ -28,8 +29,10 @@ export function QRDisplay({ status }: QRDisplayProps) {
       setCountdown((prev) => {
         if (prev <= 1) {
           setRotation((r) => r + 1);
-          setQrValue(generateDemoQRValue(rotation + 1));
-          return 30;
+          if (sessionId) {
+            setQrValue(generateDemoQRValue(sessionId, rotation + 1));
+          }
+          return 5;
         }
         return prev - 1;
       });
@@ -41,7 +44,7 @@ export function QRDisplay({ status }: QRDisplayProps) {
   // Reset countdown if paused or ended
   useEffect(() => {
     if (status !== "ACTIVE") {
-      setCountdown(30);
+      setCountdown(5);
       if (status === "ENDED") {
         setQrValue("");
         setRotation(1);
