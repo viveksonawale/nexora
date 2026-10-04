@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Nexora",
+    "slug": "nexora",
+    "scheme": "nexora",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#050A12",
+    "android": {
+      "package": "com.nexora.app",
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#050A12"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Nexora uses the camera to scan attendance QR codes."
+        }
+      ],
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
