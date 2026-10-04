@@ -13,8 +13,6 @@ const team = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <Navbar />
-
       {/* ── Hero / Mission ──────────────────────────────────────── */}
       <div className="relative pt-32 pb-24 px-6 md:px-12 overflow-hidden">
         {/* Ambient glows */}
@@ -41,12 +39,12 @@ export default function AboutPage() {
             </span>
           </h1>
           
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute -left-6 -top-6 text-6xl text-[#F97316]/20 font-serif">"</div>
-            <p className="font-sans text-xl md:text-2xl text-[var(--text-secondary)] leading-relaxed font-medium relative z-10">
+          <div className="relative max-w-3xl mx-auto px-4">
+            <p className="font-sans text-xl md:text-2xl text-[var(--text-secondary)] leading-relaxed font-medium">
+              <span className="text-4xl md:text-5xl text-[#F97316]/40 font-serif leading-none align-bottom mr-1">“</span>
               We made this project specifically for colleges who need to easily handle and organize large-scale hackathons. Nexora is designed to make the entire process, from registrations to results, seamless and beautiful.
+              <span className="text-4xl md:text-5xl text-[#F97316]/40 font-serif leading-none align-bottom ml-1">”</span>
             </p>
-            <div className="absolute -right-6 -bottom-8 text-6xl text-[#F97316]/20 font-serif">"</div>
           </div>
         </div>
       </div>

@@ -32,8 +32,6 @@ export default function HackathonLayout({
 
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)] selection:bg-[#F97316]/30 font-sans">
-      <Navbar />
-
       {/* ── Header Banner ── */}
       <div className="relative w-full h-64 md:h-80 bg-gradient-to-r from-orange-950 via-[#F97316]/80 to-orange-500">
         <div className="absolute inset-0 bg-black/20 mix-blend-overlay" />

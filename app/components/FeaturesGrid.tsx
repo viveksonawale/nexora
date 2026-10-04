@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, EyeOff, Lock, Sparkles, QrCode, CheckCircle2, Users, FileText, CalendarDays, BrainCircuit } from "lucide-react";
+import Image from "next/image";
 
 export function FeaturesGrid() {
   return (
@@ -94,7 +95,9 @@ export function FeaturesGrid() {
             {/* Sidebar & Header */}
             <div className="flex h-full">
               <div className="w-12 border-r border-[var(--border)] bg-[var(--bg-elevated)]/30 flex flex-col items-center py-4 gap-4">
-                <div className="w-6 h-6 bg-[#F97316] rounded flex items-center justify-center text-white text-xs font-bold mb-2">N</div>
+                <div className="w-6 h-6 flex items-center justify-center mb-2">
+                  <Image src="/logo/logo.png" alt="Nexora Logo" width={24} height={24} className="object-contain" />
+                </div>
                 <Users size={16} className="text-[var(--text-primary)]" />
                 <CalendarDays size={16} className="text-[var(--text-secondary)]" />
               </div>

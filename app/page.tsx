@@ -1,4 +1,4 @@
-import { Navbar } from "./components/Navbar";
+
 import { Hero } from "./components/Hero";
 import { ContactForm } from "./components/ContactForm";
 import { ShinyButton } from "./components/ShinyButton";
@@ -7,14 +7,13 @@ import { FeaturesGrid } from "./components/FeaturesGrid";
 import FeatureSection from "@/components/ui/stack-feature-section";
 import { ArrowUpRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { hackathons } from "./data/hackathons";
 
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <Navbar />
-      
       <Hero />
 
       {/* Live Hackathons Section */}
@@ -97,8 +96,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 md:px-12 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 md:mb-32">
           <div className="lg:col-span-1">
             <a href="/" className="inline-flex items-center gap-2 group">
-              <div className="w-8 h-8 bg-[#F97316] rounded-md flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-                <span className="text-white font-bold font-mono text-lg leading-none">N</span>
+              <div className="w-8 h-8 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
+                <Image src="/logo/logo.png" alt="Nexora Logo" width={32} height={32} className="object-contain" />
               </div>
               <span className="font-display font-bold text-2xl tracking-tight text-[var(--text-primary)]">
                 Nexora

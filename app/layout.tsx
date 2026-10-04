@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Inter, Playfair_Display, JetBrains_Mono, Geist } from "next/font/google";
 import "./globals.css";
 import { SmoothScroll } from "./components/SmoothScroll";
+import { Navbar } from "./components/Navbar";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <Navbar />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>
