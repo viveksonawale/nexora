@@ -43,5 +43,5 @@ const styles = StyleSheet.create({
   active: { borderColor: colors.cyan },
   filled: { borderColor: colors.borderActive },
   digit: { fontFamily: "JetBrainsMono_500Medium" },
-  hidden: { ...StyleSheet.absoluteFillObject, opacity: 0 },
+  hidden: { ...StyleSheet.absoluteFill, opacity: 0 },
 });

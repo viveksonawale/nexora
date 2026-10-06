@@ -105,7 +105,7 @@ export default function AttendanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "space-between", padding: space.xl, backgroundColor: "rgba(5,10,18,0.35)" },
+  overlay: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "space-between", padding: space.xl, backgroundColor: "rgba(5,10,18,0.35)" },
   hint: { backgroundColor: colors.surface, paddingHorizontal: space.lg, paddingVertical: space.sm, borderRadius: radius.pill, overflow: "hidden" },
   frame: { width: 240, height: 240, borderRadius: radius.lg, borderWidth: 2, borderColor: colors.cyan },
   result: { flex: 1, alignItems: "center", justifyContent: "center", gap: space.md, paddingVertical: space.xxl },
