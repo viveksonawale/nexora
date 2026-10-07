@@ -3,20 +3,20 @@ import { withApi } from "@/server/lib/api";
 import { RegistrationService } from "@/server/modules/registration/registration.service";
 import { CreateRegistrationSchema, QueryRegistrationSchema } from "@/server/modules/registration/registration.schemas";
 
-export const POST = withApi({ auth: "verified" }, async (req, { params, user }) => {
-  const { id } = params as Record<string, string>;
+export const POST = withApi({ auth: "verified" }, async (req, ctx) => {
+  const id = ctx.params?.id as string;
   const body = await req.json();
   const data = CreateRegistrationSchema.parse(body);
 
-  const reg = await RegistrationService.register(user!, id, data);
+  const reg = await RegistrationService.register(ctx.user!!, id, data);
   return NextResponse.json(reg, { status: 201 });
 });
 
-export const GET = withApi({ auth: "user" }, async (req, { params, user }) => {
-  const { id } = params as Record<string, string>;
+export const GET = withApi({ auth: "user" }, async (req, ctx) => {
+  const id = ctx.params?.id as string;
   const { searchParams } = new URL(req.url);
   const query = QueryRegistrationSchema.parse(Object.fromEntries(searchParams));
 
-  const regs = await RegistrationService.getRegistrations(user!, id, query);
+  const regs = await RegistrationService.getRegistrations(ctx.user!!, id, query);
   return NextResponse.json(regs);
 });

@@ -25,13 +25,14 @@ import {
   Link2,
 } from "lucide-react";
 
-import { hackathons } from "../data/hackathons";
+import { apiFetch } from "@/lib/api-client";
+import { LoadingState } from "@/components/shared/states";
 
 const FILTERS = ["All", "Live", "Open", "Upcoming", "Online", "Offline"];
-type SortKey = "date" | "prize" | "participants";
+type SortKey = "startsAt" | "deadline" | "newest";
 
 // ─── Card ──────────────────────────────────────────────────────────────────────
-function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
+function HackathonCard({ h }: { h: any }) {
   const router = useRouter();
 
   return (
@@ -46,22 +47,27 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
       <div className="p-6 pb-4 flex items-start justify-between gap-4 relative z-10">
         <div className="min-w-0">
           <h3 className="font-sans text-2xl font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors leading-tight">
-            {h.name}
+            {h.title}
           </h3>
           <p className="font-sans text-sm font-medium text-[var(--text-secondary)] mt-1 truncate">
-            {h.college}
+            {h.organization?.name || "Independent"}
           </p>
         </div>
 
         {/* Circular Link & Social Buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            aria-label="Website Link"
-            onClick={(e) => e.stopPropagation()}
-            className="w-10 h-10 rounded-full bg-[var(--bg-canvas)] hover:bg-[#F97316]/15 border border-[var(--border)] hover:border-[#F97316]/40 text-[var(--text-secondary)] hover:text-[#F97316] flex items-center justify-center transition-all"
-          >
-            <Link2 size={18} />
-          </button>
+          {h.websiteUrl && (
+            <button
+              aria-label="Website Link"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(h.websiteUrl, '_blank');
+              }}
+              className="w-10 h-10 rounded-full bg-[var(--bg-canvas)] hover:bg-[#F97316]/15 border border-[var(--border)] hover:border-[#F97316]/40 text-[var(--text-secondary)] hover:text-[#F97316] flex items-center justify-center transition-all"
+            >
+              <Link2 size={18} />
+            </button>
+          )}
           <button
             aria-label="Twitter / X"
             onClick={(e) => e.stopPropagation()}
@@ -79,23 +85,13 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
             THEME
           </div>
           <span className="inline-block font-sans text-xs font-semibold px-4 py-1.5 rounded-full border border-[#F97316]/30 text-[#F97316] bg-[#F97316]/10 uppercase tracking-wider shadow-xs">
-            {h.theme}
+            {h.tags?.[0] || h.mode}
           </span>
         </div>
 
         <div className="flex items-center">
-          <div className="flex items-center -space-x-2 mr-3">
-            {h.avatars.map((url, i) => (
-              <img
-                key={i}
-                src={url}
-                alt="Participant avatar"
-                className="w-7 h-7 rounded-full border-2 border-[var(--bg-elevated)] object-cover shadow-xs"
-              />
-            ))}
-          </div>
           <span className="font-sans text-sm font-bold text-[#F97316] whitespace-nowrap">
-            +{h.participants} participating
+            {h.maxParticipants ? `${h.seatsLeft || 0} seats left` : 'Unlimited seats'}
           </span>
         </div>
       </div>
@@ -110,12 +106,12 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
             {h.status}
           </span>
           <span className="font-sans text-[11px] font-bold px-3.5 py-2 rounded-xl bg-[var(--bg-canvas)] border border-[var(--border)] text-[var(--text-secondary)] uppercase tracking-wider">
-            {h.starts}
+            {new Date(h.startsAt).toLocaleDateString()}
           </span>
         </div>
 
         <NorButton className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:from-[#EA580C] hover:to-[#C2410C] text-white font-semibold text-sm shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap">
-          Apply now
+          View details
         </NorButton>
       </div>
     </div>
@@ -124,11 +120,39 @@ function HackathonCard({ h }: { h: (typeof hackathons)[0] }) {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function HackathonsPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
-  const [sort, setSort] = useState<SortKey>("date");
+  const [sort, setSort] = useState<SortKey>("startsAt");
   const [showSort, setShowSort] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
+  const [hackathons, setHackathons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const query = new URLSearchParams();
+        if (search) query.set("q", search);
+        if (activeFilter === "Online") query.set("mode", "ONLINE");
+        if (activeFilter === "Offline") query.set("mode", "OFFLINE");
+        if (activeFilter === "Upcoming") query.set("phase", "Upcoming");
+        if (activeFilter === "Open") query.set("phase", "Registrations Open");
+        if (activeFilter === "Live") query.set("phase", "Hacking");
+        query.set("sort", sort);
+        
+        const data = await apiFetch<any[]>(`/hackathons?${query.toString()}`);
+        setHackathons(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    const timer = setTimeout(load, 300);
+    return () => clearTimeout(timer);
+  }, [search, activeFilter, sort]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -145,39 +169,7 @@ export default function HackathonsPage() {
     return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
   }, []);
 
-  const filtered = hackathons
-    .filter((h) => {
-      const matchSearch =
-        h.name.toLowerCase().includes(search.toLowerCase()) ||
-        h.college.toLowerCase().includes(search.toLowerCase()) ||
-        h.location.toLowerCase().includes(search.toLowerCase()) ||
-        h.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-
-      const matchFilter =
-        activeFilter === "All" ||
-        (activeFilter === "Live" && h.isLive) ||
-        (activeFilter === "Open" && h.status === "Open") ||
-        (activeFilter === "Upcoming" && h.status === "Upcoming") ||
-        (activeFilter === "Online" && h.mode === "Online") ||
-        (activeFilter === "Offline" && h.mode === "Offline");
-
-      return matchSearch && matchFilter;
-    })
-    .sort((a, b) => {
-      if (sort === "date")
-        return (
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-        );
-      if (sort === "prize")
-        return (
-          parseInt(b.prize.replace(/\D/g, "")) -
-          parseInt(a.prize.replace(/\D/g, ""))
-        );
-      if (sort === "participants") return b.participants - a.participants;
-      return 0;
-    });
-
-  const liveCount = hackathons.filter((h) => h.isLive).length;
+  const filtered = hackathons;
 
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
@@ -259,7 +251,10 @@ export default function HackathonsPage() {
             </div>
 
             {/* Your Hackathons Button */}
-            <button className="px-6 py-3.5 rounded-2xl bg-[#F97316]/10 hover:bg-[#F97316]/20 border border-[#F97316]/25 text-[#F97316] font-semibold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
+            <button 
+              onClick={() => router.push('/my-hackathons')}
+              className="px-6 py-3.5 rounded-2xl bg-[#F97316]/10 hover:bg-[#F97316]/20 border border-[#F97316]/25 text-[#F97316] font-semibold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm"
+            >
               Your hackathons <ChevronRight size={17} />
             </button>
           </div>
@@ -287,7 +282,9 @@ export default function HackathonsPage() {
           ))}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <LoadingState message="Loading hackathons..." />
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
             <div className="w-16 h-16 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center mb-4 text-2xl">
               🔍

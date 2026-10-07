@@ -1,17 +1,26 @@
 "use client";
 
-import { use } from "react";
-import { hackathons } from "../../../data/hackathons";
-import { notFound } from "next/navigation";
+import { use, useState, useEffect } from "react";
+import { apiFetch } from "@/lib/api-client";
+import { LoadingState, ErrorState } from "@/components/shared/states";
 import { Trophy } from "lucide-react";
 
 export default function OverviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const hackathon = hackathons.find((h) => h.slug === id);
+  
+  const [hackathon, setHackathon] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!hackathon) {
-    notFound();
-  }
+  useEffect(() => {
+    apiFetch(`/hackathons/${id}`)
+      .then(setHackathon)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) return <LoadingState message="Loading overview..." />;
+  if (error || !hackathon) return <ErrorState message={error || "Not found"} onRetry={() => window.location.reload()} />;
 
   return (
     <>
@@ -21,12 +30,12 @@ export default function OverviewPage({ params }: { params: Promise<{ id: string 
         </h2>
         <div className="text-[var(--text-secondary)] text-lg leading-relaxed space-y-5">
           <p>
-            <strong className="text-[var(--text-primary)] font-semibold">{hackathon.name}</strong> - The Flagship Hackathon at {hackathon.college} is here to challenge the brightest minds.
+            <strong className="text-[var(--text-primary)] font-semibold">{hackathon.title}</strong> - The Flagship Hackathon at {hackathon.organization?.name || "our organization"} is here to challenge the brightest minds.
             Join us for an electrifying <span className="lowercase">{hackathon.mode}</span> experience where creativity meets technology.
           </p>
           <p>
             Whether you&apos;re a seasoned developer or a passionate beginner, this is your platform to build solutions that matter,
-            connect with industry experts, and showcase your skills on a global stage. The hackathon will focus on pushing boundaries in {hackathon.tags.join(" and ")}.
+            connect with industry experts, and showcase your skills on a global stage. The hackathon will focus on pushing boundaries in {hackathon.tags?.join(" and ") || "innovation"}.
           </p>
         </div>
       </section>
@@ -38,7 +47,7 @@ export default function OverviewPage({ params }: { params: Promise<{ id: string 
                <Trophy className="w-8 h-8" />
              </div>
              <div>
-               <h3 className="text-2xl font-display font-bold">{hackathon.prize} Available in Prizes</h3>
+               <h3 className="text-2xl font-display font-bold">Awesome Prizes Available</h3>
                <p className="text-sm font-medium text-[var(--text-secondary)] mt-1">across various tracks and categories</p>
              </div>
            </div>
@@ -64,11 +73,17 @@ export default function OverviewPage({ params }: { params: Promise<{ id: string 
           Guidelines & Rules
         </h2>
         <ul className="list-disc list-inside text-[var(--text-secondary)] space-y-3 marker:text-[#F97316] font-sans">
-          <li>Teams can consist of 1 to 4 members.</li>
+          <li>Teams can consist of {hackathon.minTeamSize} to {hackathon.maxTeamSize} members.</li>
           <li>All code must be written during the hackathon period.</li>
           <li>Use of open-source libraries and APIs is allowed and encouraged.</li>
           <li>Submissions must include a GitHub repository and a short video demo.</li>
         </ul>
+        
+        {hackathon.description && (
+          <div className="mt-6 text-[var(--text-secondary)] prose dark:prose-invert">
+            {hackathon.description}
+          </div>
+        )}
       </section>
     </>
   );

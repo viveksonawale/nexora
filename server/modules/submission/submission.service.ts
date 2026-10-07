@@ -171,9 +171,10 @@ export class SubmissionService {
     });
   }
 
-  private static async getHackathonAndVerifyStaff(user: AuthUser, hackathonId: string) {
-    const hackathon = await db.hackathon.findUnique({
-      where: { id: hackathonId },
+  private static async getHackathonAndVerifyStaff(user: AuthUser, hackathonIdOrSlug: string) {
+    const isCuid = hackathonIdOrSlug.length >= 24;
+    const hackathon = await db.hackathon.findFirst({
+      where: isCuid ? { id: hackathonIdOrSlug } : { slug: hackathonIdOrSlug },
       include: { organization: true },
     });
     if (!hackathon) throw AppError.notFound("Hackathon not found");
@@ -209,5 +210,115 @@ export class SubmissionService {
       where: { id: submissionId },
       data: { status: SubmissionStatus.SUBMITTED },
     });
+  }
+
+  static async getPublicProjects(hackathonIdOrSlug: string) {
+    const hackathon = await db.hackathon.findFirst({
+      where: {
+        OR: [{ id: hackathonIdOrSlug }, { slug: hackathonIdOrSlug }],
+      },
+    });
+
+    if (!hackathon) throw AppError.notFound("Hackathon not found");
+
+    // Only allow if results are published or judging is done/locked, per rules?
+    // "only after results are published"
+    if (!hackathon.resultsPublishedAt || new Date() < hackathon.resultsPublishedAt) {
+      throw AppError.businessRule("INVALID_STATE", "Projects are not public yet.");
+    }
+
+    const submissions = await db.submission.findMany({
+      where: {
+        hackathonId: hackathon.id,
+        status: SubmissionStatus.SUBMITTED,
+      },
+      include: {
+        team: {
+          select: {
+            name: true,
+            leader: { select: { name: true } },
+          }
+        },
+        media: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return submissions.map(sub => ({
+      id: sub.id,
+      title: sub.title,
+      tagline: sub.tagline,
+      description: sub.description,
+      teamName: sub.team.name,
+      leaderName: sub.team.leader.name,
+      media: sub.media.map(m => ({ kind: m.kind, url: m.url, caption: m.caption })),
+    }));
+  }
+
+  static async getHackathonSubmissions(user: AuthUser, hackathonIdOrSlug: string) {
+    const { hackathon } = await this.getHackathonAndVerifyStaff(user, hackathonIdOrSlug);
+    
+    return db.submission.findMany({
+      where: { hackathonId: hackathon.id, status: { not: SubmissionStatus.DRAFT } },
+      include: {
+        team: {
+          include: {
+            leader: { select: { name: true, email: true } },
+            members: { include: { registration: { include: { user: { select: { name: true, email: true } } } } } }
+          }
+        },
+        media: true,
+        assignments: true,
+      },
+      orderBy: { submittedAt: "desc" }
+    });
+  }
+
+  static async getPublicProject(id: string) {
+    const sub = await db.submission.findUnique({
+      where: { id },
+      include: {
+        team: {
+          include: {
+            leader: { select: { name: true, profile: { select: { avatarUrl: true, headline: true, slug: true } } } },
+            members: {
+              include: {
+                registration: {
+                  include: {
+                    user: { select: { name: true, profile: { select: { avatarUrl: true, headline: true, slug: true } } } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        media: true,
+        hackathon: true,
+      },
+    });
+
+    if (!sub || sub.status !== SubmissionStatus.SUBMITTED) throw AppError.notFound("Project not found");
+
+    if (!sub.hackathon.resultsPublishedAt || new Date() < sub.hackathon.resultsPublishedAt) {
+      throw AppError.businessRule("INVALID_STATE", "Project is not public yet.");
+    }
+
+    return {
+      id: sub.id,
+      title: sub.title,
+      tagline: sub.tagline,
+      description: sub.description,
+      repoUrl: sub.repoUrl,
+      demoUrl: sub.demoUrl,
+      videoUrl: sub.videoUrl,
+      presentationUrl: sub.presentationUrl,
+      techStack: sub.techStack,
+      team: {
+        name: sub.team.name,
+        leader: sub.team.leader,
+        members: sub.team.members.map(m => m.registration.user),
+      },
+      media: sub.media.map(m => ({ kind: m.kind, url: m.url, caption: m.caption })),
+    };
   }
 }

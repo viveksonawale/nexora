@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { withApi } from "@/server/lib/api";
 import { HackathonService } from "@/server/modules/hackathon/hackathon.service";
 
-export const POST = withApi({ auth: "user" }, async (req, { params, user }) => {
-  const { id } = params as Record<string, string>;
-  const hackathon = await HackathonService.cloneHackathon(user!, id);
+export const POST = withApi({ auth: "user" }, async (req, ctx) => {
+  const id = ctx.params?.id as string;
+  const hackathon = await HackathonService.cloneHackathon(ctx.user!!, id);
   return NextResponse.json(hackathon, { status: 201 });
 });

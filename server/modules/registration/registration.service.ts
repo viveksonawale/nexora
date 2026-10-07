@@ -11,6 +11,8 @@ import {
   QueryRegistrationSchema,
 } from "./registration.schemas";
 import { randomBytes } from "crypto";
+import jwt from "jsonwebtoken";
+import { env } from "@/server/lib/env";
 
 export class RegistrationService {
   /**
@@ -129,7 +131,14 @@ export class RegistrationService {
     const reg = await db.registration.findUnique({ where: { id } });
     if (!reg) throw AppError.notFound("Not found");
     if (reg.userId !== user.id) throw AppError.forbidden("Access denied");
-    return { qrToken: reg.qrToken };
+    // Generate short-lived JWT (valid for 30 seconds)
+    const token = jwt.sign(
+      { registrationId: reg.id },
+      (env as any).JWT_ACCESS_SECRET || "fallback_secret_for_dev",
+      { expiresIn: "30s" }
+    );
+    
+    return { qrToken: token };
   }
 
   static async getRegistrations(user: AuthUser, hackathonId: string, query: z.infer<typeof QueryRegistrationSchema>) {
@@ -191,8 +200,18 @@ export class RegistrationService {
   static async checkIn(user: AuthUser, hackathonId: string, data: z.infer<typeof CheckInSchema>) {
     await this.getHackathonAndVerifyStaff(user, hackathonId);
 
-    const where = data.qrToken ? { qrToken: data.qrToken } : { id: data.registrationId! };
-    const reg = await db.registration.findUnique({ where });
+    let reg = null;
+
+    if (data.qrToken) {
+      try {
+        const decoded = jwt.verify(data.qrToken, (env as any).JWT_ACCESS_SECRET || "fallback_secret_for_dev") as any;
+        reg = await db.registration.findUnique({ where: { id: decoded.registrationId } });
+      } catch (err) {
+        throw AppError.businessRule("INVALID_STATE", "QR code has expired or is invalid. Please scan again.");
+      }
+    } else {
+      reg = await db.registration.findUnique({ where: { id: data.registrationId! } });
+    }
 
     if (!reg || reg.hackathonId !== hackathonId) throw AppError.notFound("Registration not found");
     if (reg.status !== "APPROVED") throw AppError.businessRule("INVALID_STATE", "Only APPROVED registrations can check-in.");

@@ -5,6 +5,7 @@ import "./globals.css";
 import { SmoothScroll } from "./components/SmoothScroll";
 import { Navbar } from "./components/Navbar";
 import { cn } from "@/lib/utils";
+import { SessionProvider } from "@/lib/contexts/SessionContext";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -47,8 +48,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <Navbar />
-        <SmoothScroll>{children}</SmoothScroll>
+        <SessionProvider>
+          <Navbar />
+          <SmoothScroll>{children}</SmoothScroll>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -95,8 +95,12 @@ export class HackathonService {
     }
     if (query.mode) where.mode = query.mode;
     if (query.city) where.city = { contains: query.city, mode: "insensitive" };
-    if (query.tag) where.tags = { has: query.tag };
-    if (query.orgSlug) where.organization = { slug: query.orgSlug };
+    if (query.tag) {
+      where.tags = { has: query.tag };
+    }
+    if (query.orgSlug) {
+      where.organization = { slug: query.orgSlug };
+    }
     
     // Add date filtering
     if (query.from || query.to) {
@@ -448,5 +452,51 @@ export class HackathonService {
     const scoreCount = await db.score.count({ where: { criterionId } });
     if (scoreCount > 0) throw AppError.businessRule("INVALID_STATE", "Cannot delete criteria once scores exist.");
     await db.judgingCriterion.delete({ where: { id: criterionId } });
+  }
+
+  static async getPublicWinners(hackathonIdOrSlug: string) {
+    const hackathon = await db.hackathon.findFirst({
+      where: {
+        OR: [{ id: hackathonIdOrSlug }, { slug: hackathonIdOrSlug }],
+      },
+    });
+
+    if (!hackathon) throw AppError.notFound("Hackathon not found");
+
+    if (!hackathon.resultsPublishedAt || new Date() < hackathon.resultsPublishedAt) {
+      throw AppError.businessRule("INVALID_STATE", "Winners are not public yet.");
+    }
+
+    const awards = await db.prizeAward.findMany({
+      where: { prize: { hackathonId: hackathon.id } },
+      include: {
+        prize: true,
+        submission: {
+          include: {
+            team: {
+              select: { name: true, leader: { select: { name: true } } }
+            },
+            media: true
+          }
+        }
+      },
+      orderBy: { prize: { sortOrder: "asc" } }
+    });
+
+    return awards.map(a => ({
+      prize: {
+        title: a.prize.title,
+        amount: a.prize.amount,
+        currency: a.prize.currency,
+      },
+      project: {
+        id: a.submission.id,
+        title: a.submission.title,
+        tagline: a.submission.tagline,
+        teamName: a.submission.team.name,
+        leaderName: a.submission.team.leader.name,
+        media: a.submission.media.map(m => ({ kind: m.kind, url: m.url, caption: m.caption })),
+      }
+    }));
   }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { withApi } from "@/server/lib/api";
+import { withApi, jsonResponse } from "@/server/lib/api";
 import { HackathonService } from "@/server/modules/hackathon/hackathon.service";
 import { QueryHackathonSchema } from "@/server/modules/hackathon/hackathon.schemas";
 
@@ -8,5 +8,5 @@ export const GET = withApi({ auth: "public" }, async (req) => {
   const query = QueryHackathonSchema.parse(Object.fromEntries(searchParams));
 
   const hackathons = await HackathonService.getHackathons(query);
-  return NextResponse.json(hackathons);
+  return jsonResponse(hackathons);
 });

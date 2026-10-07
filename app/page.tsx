@@ -8,10 +8,10 @@ import FeatureSection from "@/components/ui/stack-feature-section";
 import { ArrowUpRight, Calendar, MapPin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { hackathons } from "./data/hackathons";
+import { HackathonService } from "@/server/modules/hackathon/hackathon.service";
 
-
-export default function Home() {
+export default async function Home() {
+  const hackathons = await HackathonService.getHackathons({ phase: "Hacking", sort: "startsAt" });
   return (
     <main className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
       <Hero />
@@ -48,13 +48,13 @@ export default function Home() {
               <div>
                 {/* Title */}
                 <h3 className="font-display text-2xl font-bold text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors duration-200 mb-2 tracking-tight">
-                  {hackathon.name}
+                  {hackathon.title}
                 </h3>
 
                 {/* Date below title */}
                 <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--text-secondary)] mb-6">
                   <Calendar size={14} className="text-[#F97316]" />
-                  <span>{hackathon.startDate}</span>
+                  <span>{new Date(hackathon.startsAt).toLocaleDateString()}</span>
                 </div>
               </div>
 
@@ -62,7 +62,7 @@ export default function Home() {
                 {/* Location above the button */}
                 <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-secondary)] mb-4">
                   <MapPin size={14} className="text-[#F97316]" />
-                  <span>{hackathon.location}</span>
+                  <span>{hackathon.city || hackathon.mode}</span>
                 </div>
 
                 {/* Themed Interactive Button */}

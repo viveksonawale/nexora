@@ -45,6 +45,10 @@ const envSchema = z.object({
   SUPER_ADMIN_PASSWORD: z.string(),
   
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

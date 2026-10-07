@@ -1,29 +1,43 @@
 "use client";
 
-import { use } from "react";
-import { hackathons } from "../../../data/hackathons";
-import { notFound } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api-client";
+import { LoadingState, ErrorState } from "@/components/shared/states";
 import { Search } from "lucide-react";
 
 export default function ProjectsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const hackathon = hackathons.find((h) => h.slug === id);
+  
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!hackathon) {
-    notFound();
-  }
+  useEffect(() => {
+    apiFetch(`/hackathons/${id}/projects`)
+      .then((data) => setProjects(data as any[]))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  const projects = [
-    { name: "PactAgent", by: "Pontmore", desc: "Agents make pacts. Protocols keep the truth." },
-    { name: "Stegashareus", by: "Alok", desc: "Covert, Loss-Resistant Seed Phrase Storage" },
-    { name: "Ghost Infrastructure", by: "Olivia", desc: "Turning neglected urban land into AI-powered oppor" },
-    { name: "Geo echo", by: "Tiny byts", desc: "\"Don't Search Everywhere. Search Smarter.\"" },
-  ];
+  if (loading) return <LoadingState message="Loading projects..." />;
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4 text-2xl">
+        🔒
+      </div>
+      <h3 className="font-display text-xl font-bold text-[var(--text-primary)] mb-2">
+        Projects are not public yet
+      </h3>
+      <p className="text-sm text-[var(--text-secondary)] font-sans">
+        {error}
+      </p>
+    </div>
+  );
 
   return (
     <section className="space-y-6">
       <h2 className="text-3xl font-display font-bold text-[var(--text-primary)] tracking-tight">
-        Projects (48)
+        Projects ({projects.length})
       </h2>
       
       <div className="flex items-center gap-3 p-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-sm">
@@ -46,18 +60,18 @@ export default function ProjectsPage({ params }: { params: Promise<{ id: string 
              <div>
                <div className="flex items-center gap-4 mb-3">
                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-xl font-bold font-display text-indigo-400">
-                   {p.name.charAt(0)}
+                   {p.title.charAt(0)}
                  </div>
                  <div>
-                   <h3 className="font-sans font-bold text-lg">{p.name}</h3>
-                   <div className="font-sans text-sm text-[var(--text-secondary)]">By {p.by}</div>
+                   <h3 className="font-sans font-bold text-lg">{p.title}</h3>
+                   <div className="font-sans text-sm text-[var(--text-secondary)]">By {p.teamName}</div>
                  </div>
                </div>
-               <p className="font-sans text-sm text-[var(--text-secondary)]">{p.desc}</p>
+               <p className="font-sans text-sm text-[var(--text-secondary)] line-clamp-3">{p.description}</p>
              </div>
              <div className="mt-4">
                <span className="font-sans text-xs border border-[var(--border)] rounded-md px-2 py-1 bg-[var(--bg-canvas)] flex items-center w-fit gap-1.5">
-                 🏆 Built at {hackathon.name}
+                 🏆 Submitted
                </span>
              </div>
           </div>

@@ -3,10 +3,13 @@
 import { notFound, usePathname } from "next/navigation";
 import { Navbar } from "../../components/Navbar";
 import { hackathons } from "../../data/hackathons";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { Clock, MapPin, Link2, Share, Trophy } from "lucide-react";
 import Link from "next/link";
 import { NorButton } from "../../../components/ui/nor-button";
+
+import { apiFetch } from "@/lib/api-client";
+import { LoadingState, ErrorState } from "@/components/shared/states";
 
 export default function HackathonLayout({
   children,
@@ -16,12 +19,28 @@ export default function HackathonLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const hackathon = hackathons.find((h) => h.slug === id);
   const pathname = usePathname();
+  
+  const [hackathon, setHackathon] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!hackathon) {
-    notFound();
-  }
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await apiFetch(`/hackathons/${id}`);
+        setHackathon(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load hackathon");
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id]);
+
+  if (loading) return <LoadingState message="Loading hackathon details..." />;
+  if (error || !hackathon) return <ErrorState message={error || "Not found"} onRetry={() => window.location.reload()} />;
 
   const tabs = [
     { name: "OVERVIEW", href: `/hackathons/${id}/overview` },
@@ -41,11 +60,11 @@ export default function HackathonLayout({
           <div className="flex flex-col items-center z-10">
              <div className="w-24 h-24 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 flex items-center justify-center mb-6 shadow-2xl">
                <span className="text-5xl font-display font-bold text-white drop-shadow-md">
-                 {hackathon.name.charAt(0)}
+                 {hackathon.title.charAt(0)}
                </span>
              </div>
              <h1 className="text-4xl md:text-6xl font-display font-extrabold text-white tracking-tight drop-shadow-lg text-center px-4">
-               {hackathon.name}
+               {hackathon.title}
              </h1>
           </div>
         </div>
@@ -107,7 +126,7 @@ export default function HackathonLayout({
                   </div>
                   <div className="flex items-center gap-3 text-sm font-semibold font-sans">
                     <Clock size={18} className="text-[#F97316]" />
-                    {hackathon.startDate}
+                    {new Date(hackathon.startsAt).toLocaleDateString()}
                   </div>
                 </div>
 
@@ -117,7 +136,7 @@ export default function HackathonLayout({
                   </div>
                   <div className="flex items-center gap-3 text-sm font-semibold font-sans">
                     <MapPin size={18} className="text-[#F97316]" />
-                    {hackathon.location}
+                    {hackathon.city || hackathon.mode}
                   </div>
                 </div>
 
@@ -134,21 +153,11 @@ export default function HackathonLayout({
 
               {/* Apply Button */}
               <div className="mt-8 pt-6 border-t border-[var(--border)]">
-                <NorButton className="w-full h-12 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-sm shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all flex items-center justify-center">
+                <Link href={`/hackathons/${id}/register`} className="w-full h-12 rounded-xl bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-sm shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all flex items-center justify-center">
                   Apply now
-                </NorButton>
-                <div className="mt-6 flex items-center justify-center -space-x-2">
-                  {hackathon.avatars.map((url, i) => (
-                    <img
-                      key={i}
-                      src={url}
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full border-[3px] border-[var(--bg-elevated)] object-cover"
-                    />
-                  ))}
-                </div>
+                </Link>
                 <div className="mt-2 text-center text-xs font-semibold text-[var(--text-secondary)] font-sans">
-                  Join <span className="text-[#F97316]">{hackathon.participants}+</span> participants
+                  Join <span className="text-[#F97316]">{hackathon.seatsLeft !== null ? `${hackathon.seatsLeft} seats left` : 'Unlimited seats'}</span>
                 </div>
               </div>
             </div>
