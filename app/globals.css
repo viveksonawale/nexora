@@ -260,3 +260,35 @@ body {
     @apply font-sans;
   }
 }
+
+/* Loading Spinner - Delta-V equalizer bars */
+:root { 
+  --ink: #F97316; /* Orange accent */
+}
+
+.ld-bars { 
+  display: flex; 
+  gap: 6px; 
+  align-items: center; 
+  height: 40px; 
+  justify-content: center;
+}
+
+.ld-bars i {
+  width: 6px; 
+  height: 100%;
+  border-radius: 9999px; /* Pill shape */
+  background: var(--ink);
+  animation: bars 1s ease-in-out infinite;
+}
+
+.ld-bars i:nth-child(1) { animation-delay: 0s; }
+.ld-bars i:nth-child(2) { animation-delay: .12s; }
+.ld-bars i:nth-child(3) { animation-delay: .24s; }
+.ld-bars i:nth-child(4) { animation-delay: .36s; }
+.ld-bars i:nth-child(5) { animation-delay: .48s; }
+
+@keyframes bars {
+  0%, 100% { transform: scaleY(.3); opacity: .35; }
+  50%      { transform: scaleY(1);  opacity: 1; }
+}

@@ -102,6 +102,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <motion.button
+        suppressHydrationWarning
         ref={ref}
         type="button"
         whileTap={reduce ? undefined : { scale: pressScale }}
@@ -169,6 +170,7 @@ export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(
 
     return (
       <motion.a
+        suppressHydrationWarning
         ref={ref}
         whileTap={reduce ? undefined : { scale: pressScale }}
         whileHover={reduce || !canHover ? undefined : { scale: 1.02 }}

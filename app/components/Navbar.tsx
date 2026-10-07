@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Moon, Sun, Trophy, Sparkles, Info } from "lucide-react";
 import { ShinyButton } from "./ShinyButton";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AuthModal } from "./AuthModal";
 
@@ -12,6 +13,35 @@ export function Navbar() {
   const [theme, setTheme] = useState("dark");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const pathname = usePathname();
+
+  const navLinks = [
+    { label: "Hackathons", href: "/hackathons", icon: Trophy },
+    { label: "Features", href: "/features", icon: Sparkles },
+    { label: "About", href: "/about", icon: Info },
+  ];
+
+  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [tabStyle, setTabStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [activeTab, setActiveTab] = useState(-1);
+
+  useEffect(() => {
+    let current = navLinks.findIndex(item => {
+      const base = item.href.split("#")[0] || "/";
+      return pathname === base || (base !== "/" && pathname.startsWith(base));
+    });
+    setActiveTab(current);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (activeTab >= 0 && tabRefs.current[activeTab]) {
+      const el = tabRefs.current[activeTab];
+      if (el) {
+        setTabStyle({ left: el.offsetLeft, width: el.offsetWidth, opacity: 1 });
+      }
+    } else {
+      setTabStyle(prev => ({ ...prev, opacity: 0 }));
+    }
+  }, [activeTab, scrolled]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,12 +83,6 @@ export function Navbar() {
     }
   };
 
-  const navLinks = [
-    { label: "Hackathons", href: "/hackathons", icon: Trophy },
-    { label: "Features", href: "/#features", icon: Sparkles },
-    { label: "About", href: "/about", icon: Info },
-  ];
-
   const isHackathonSubpage = pathname.startsWith("/hackathons/") && pathname.split("/").filter(Boolean).length >= 2;
   const isHiddenOnSubpage = isHackathonSubpage && scrolled;
   const isDarkHeroTop = (pathname === "/" || isHackathonSubpage) && !scrolled;
@@ -84,8 +108,8 @@ export function Navbar() {
           {/* Left: Brand / Logo */}
           <div className="flex-1 flex justify-start">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#F97316] to-[#EA580C] flex items-center justify-center text-[#121110] font-display font-extrabold text-sm shadow-md group-hover:scale-105 transition-transform">
-                N
+              <div className="w-9 h-9 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Image src="/logo/logo.png" alt="Nexora Logo" width={36} height={36} className="object-contain" />
               </div>
               <span className={`font-display font-extrabold text-xl tracking-tight transition-colors ${isDarkHeroTop ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                 Nexora
@@ -94,20 +118,42 @@ export function Navbar() {
           </div>
 
           {/* Center: Navigation Links */}
-          <div className="hidden md:flex flex-none items-center gap-3">
-            {navLinks.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`px-5 py-2.5 rounded-full text-base font-semibold tracking-wide transition-all ${
-                  isDarkHeroTop
-                    ? "text-white/95 hover:text-white hover:bg-white/10"
-                    : "text-[var(--text-primary)] hover:text-[#F97316] hover:bg-[var(--bg-inverse)]/5"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div className="hidden md:flex flex-none items-center relative h-full">
+            <span
+              style={{
+                position: 'absolute',
+                left: tabStyle.left,
+                width: tabStyle.width,
+                height: '40px',
+                top: '50%',
+                marginTop: '-20px',
+                backgroundColor: isDarkHeroTop ? 'rgba(255, 255, 255, 0.1)' : 'var(--text-primary)',
+                opacity: tabStyle.opacity ? (isDarkHeroTop ? 1 : 0.05) : 0,
+                borderRadius: '9999px',
+                transition: 'left .4s cubic-bezier(.65,0,.35,1), width .4s cubic-bezier(.65,0,.35,1), opacity .4s ease',
+                pointerEvents: 'none'
+              }}
+            />
+            <div className="flex items-center gap-1">
+              {navLinks.map((item, i) => {
+                const isActive = activeTab === i;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => setActiveTab(i)}
+                    ref={(el) => { tabRefs.current[i] = el; }}
+                    className={`px-5 py-2.5 rounded-full text-base font-semibold tracking-wide transition-colors duration-400 z-10 focus:outline-none ${
+                      isDarkHeroTop
+                        ? isActive ? "text-white" : "text-white/70 hover:text-white"
+                        : isActive ? "text-[#F97316]" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
           {/* Right: Actions */}

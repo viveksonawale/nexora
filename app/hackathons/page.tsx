@@ -181,8 +181,6 @@ export default function HackathonsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <Navbar />
-
       {/* ── Hero / Header ──────────────────────────────────────── */}
       <div className="relative pt-32 pb-16 px-6 md:px-12 overflow-hidden">
         {/* Ambient glow blobs */}
