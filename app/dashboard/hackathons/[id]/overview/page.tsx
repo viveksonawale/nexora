@@ -77,7 +77,7 @@ export default function HackathonOverviewPage({ params }: { params: Promise<{ id
       icon: Lock,
       color: "bg-amber-600 hover:bg-amber-500 text-white",
     };
-  } else if (currentStatus === "REGISTRATION_CLOSED") {
+  } else if (currentStatus === "REGISTRATION_CLOSED" || currentStatus === "PUBLISHED") {
     nextTransition = {
       target: "LIVE",
       label: "Start Event (Go Live)",
@@ -161,6 +161,7 @@ export default function HackathonOverviewPage({ params }: { params: Promise<{ id
               <span className="text-xs text-[var(--text-secondary)] font-sans">
                 {currentStatus === "DRAFT" && "Configuring event. Hidden from participants."}
                 {currentStatus === "REGISTRATION_OPEN" && "Participant applications are open."}
+                {currentStatus === "PUBLISHED" && "Hackathon is published. Ready to start event."}
                 {currentStatus === "REGISTRATION_CLOSED" && "Registrations closed. Finalizing reviews."}
                 {currentStatus === "LIVE" && "Hackathon is live! Live attendance & QR scan active."}
                 {currentStatus === "SUBMISSION_CLOSED" && "Submissions locked. Preparing judging assignments."}

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { OrganizationStatus, UserStatus, PlatformRole, HackathonStaffRole } from "@prisma/client";
+import { OrganizationStatus, UserStatus, PlatformRole, HackathonStaffRole, HackathonStatus } from "@prisma/client";
 
 export const QueryOrganizationsSchema = z.object({
   status: z.nativeEnum(OrganizationStatus).optional(),
@@ -69,7 +69,7 @@ export const AdminUpdateHackathonSchema = z.object({
   tagline: z.string().optional(),
   description: z.string().optional(),
   mode: z.enum(["ONLINE", "IN_PERSON", "HYBRID"]).optional(),
-  status: z.enum(["DRAFT", "PUBLISHED", "PAUSED", "COMPLETED", "ARCHIVED", "CANCELLED"]).optional(),
+  status: z.nativeEnum(HackathonStatus).optional(),
   startsAt: z.string().datetime().or(z.date()).optional(),
   endsAt: z.string().datetime().or(z.date()).optional(),
   submissionDeadline: z.string().datetime().or(z.date()).optional(),

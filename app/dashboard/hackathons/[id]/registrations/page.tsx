@@ -33,7 +33,7 @@ export default function RegistrationsPage({ params }: { params: Promise<{ id: st
     try {
       // Bulk update route is more reliable to assume if single doesn't exist, but let's try bulk since it takes an array of ids.
       await apiFetch(`/hackathons/${id}/registrations/bulk-status`, {
-        method: "PATCH",
+        method: "POST",
         body: JSON.stringify({ ids: [regId], status }),
       });
       fetchRegistrations();

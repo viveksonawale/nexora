@@ -301,7 +301,7 @@ export default function AdminHackathonsPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {["ALL", "PUBLISHED", "DRAFT", "ARCHIVED", "CANCELLED"].map((st) => (
+          {["ALL", "DRAFT", "REGISTRATION_OPEN", "LIVE", "JUDGING", "PUBLISHED", "ARCHIVED", "CANCELLED"].map((st) => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
@@ -373,7 +373,9 @@ export default function AdminHackathonsPage() {
                           value={h.status}
                           onChange={(e) => handleStatusChange(h.id, e.target.value)}
                           className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wide border cursor-pointer ${
-                            h.status === "PUBLISHED"
+                            h.status === "LIVE"
+                              ? "bg-red-500/10 text-red-500 border-red-500/30"
+                              : h.status === "PUBLISHED" || h.status === "REGISTRATION_OPEN"
                               ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
                               : h.status === "DRAFT"
                               ? "bg-amber-500/10 text-amber-500 border-amber-500/30"
@@ -381,9 +383,13 @@ export default function AdminHackathonsPage() {
                           }`}
                         >
                           <option value="DRAFT">DRAFT</option>
+                          <option value="REGISTRATION_OPEN">REGISTRATION_OPEN</option>
+                          <option value="REGISTRATION_CLOSED">REGISTRATION_CLOSED</option>
+                          <option value="LIVE">LIVE</option>
+                          <option value="SUBMISSION_CLOSED">SUBMISSION_CLOSED</option>
+                          <option value="JUDGING">JUDGING</option>
+                          <option value="RESULTS_PUBLISHED">RESULTS_PUBLISHED</option>
                           <option value="PUBLISHED">PUBLISHED</option>
-                          <option value="PAUSED">PAUSED</option>
-                          <option value="COMPLETED">COMPLETED</option>
                           <option value="ARCHIVED">ARCHIVED</option>
                           <option value="CANCELLED">CANCELLED</option>
                         </select>
@@ -696,9 +702,13 @@ export default function AdminHackathonsPage() {
                     className="w-full px-3 py-2 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-orange-500"
                   >
                     <option value="DRAFT">DRAFT</option>
+                    <option value="REGISTRATION_OPEN">REGISTRATION_OPEN</option>
+                    <option value="REGISTRATION_CLOSED">REGISTRATION_CLOSED</option>
+                    <option value="LIVE">LIVE</option>
+                    <option value="SUBMISSION_CLOSED">SUBMISSION_CLOSED</option>
+                    <option value="JUDGING">JUDGING</option>
+                    <option value="RESULTS_PUBLISHED">RESULTS_PUBLISHED</option>
                     <option value="PUBLISHED">PUBLISHED</option>
-                    <option value="PAUSED">PAUSED</option>
-                    <option value="COMPLETED">COMPLETED</option>
                     <option value="ARCHIVED">ARCHIVED</option>
                     <option value="CANCELLED">CANCELLED</option>
                   </select>
