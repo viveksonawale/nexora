@@ -87,7 +87,7 @@ export class HackathonService {
 
   static async getHackathons(query: z.infer<typeof QueryHackathonSchema>) {
     const where: any = {
-      status: HackathonStatus.PUBLISHED,
+      status: { notIn: [HackathonStatus.DRAFT, HackathonStatus.CANCELLED] },
       visibility: "PUBLIC",
     };
 
@@ -165,7 +165,7 @@ export class HackathonService {
 
     if (!hackathon) throw AppError.notFound("Hackathon not found");
 
-    if (hackathon.status !== "PUBLISHED") {
+    if (hackathon.status === "DRAFT") {
       // Must be staff/admin of org to view DRAFT
       if (!user) throw AppError.notFound("Hackathon not found");
       const membership = await db.organizationMember.findUnique({

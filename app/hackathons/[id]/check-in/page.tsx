@@ -52,9 +52,17 @@ export default function StudentCheckInPage({
           apiFetch(`/hackathons/${id}/attendance/sessions`).catch(() => null),
         ]);
 
+        const hackDataAny = hackData as any;
         if (mounted) {
           setHackathon(hackData);
           setSession(sessionData as any);
+          if (hackDataAny?.myRegistration) {
+            setRegistration(hackDataAny.myRegistration);
+            if (hackDataAny.myRegistration.checkedInAt) {
+              setHasMarkedAttendance(true);
+              setMarkedTimestamp(new Date(hackDataAny.myRegistration.checkedInAt).toLocaleTimeString());
+            }
+          }
         }
 
         // Check student's registration
@@ -68,7 +76,7 @@ export default function StudentCheckInPage({
             }
           }
         } catch {
-          if (mounted) setRegistration(null);
+          if (mounted && !hackDataAny?.myRegistration) setRegistration(null);
         }
       } catch (err: any) {
         console.error("Failed to load student check-in data:", err);

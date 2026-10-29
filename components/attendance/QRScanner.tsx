@@ -45,8 +45,14 @@ export function QRScanner({ onScanSuccess, onScanError, isActive }: QRScannerPro
 
       try {
         // Enforce camera stream permission check via getUserMedia
-        const testStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        // Release test stream tracks before handing off to scanner
+        let testStream: MediaStream | null = null;
+        try {
+          testStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+          });
+        } catch {
+          testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
         testStream.getTracks().forEach((track) => track.stop());
 
         if (!scannerRef.current) return;
