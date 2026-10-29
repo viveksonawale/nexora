@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { LoadingState } from "@/components/shared/states";
 import Link from "next/link";
-import { Plus, Settings, Users } from "lucide-react";
+import { Plus, Settings, Users, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function OrganizationDashboardPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -56,6 +56,13 @@ export default function OrganizationDashboardPage({ params }: { params: Promise<
         </div>
 
         <div className="flex gap-3">
+          <Link
+            href={`/dashboard/organizations/${org.slug}/verifications`}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-canvas)] border border-[var(--border)] hover:border-orange-500 text-[var(--text-primary)] rounded-xl font-sans font-medium transition-colors"
+          >
+            <ShieldCheck size={16} className="text-orange-500" />
+            Verification Queue
+          </Link>
           <button className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-canvas)] border border-[var(--border)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] rounded-xl font-sans font-medium transition-colors">
             <Users size={16} />
             Members

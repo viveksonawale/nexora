@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { NAV_CONFIG } from "@/lib/nav-config";
 import { useSession } from "@/lib/contexts/SessionContext";
@@ -19,8 +20,23 @@ export function Sidebar() {
   return (
     <aside className="w-64 flex-none border-r border-[var(--border)] bg-[var(--bg-elevated)] h-full flex flex-col">
       <div className="p-6 border-b border-[var(--border)]">
-        <Link href="/" className="font-display font-bold text-2xl text-[var(--text-primary)]">
-          Nexora <span className="text-orange-500 text-sm align-top">Judge</span>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Image
+              src="/logo/logo.png"
+              alt="Nexora Logo"
+              width={32}
+              height={32}
+              className="object-contain w-8 h-8"
+              priority
+            />
+          </div>
+          <span className="font-display font-bold text-xl text-[var(--text-primary)] tracking-tight">
+            Nexora
+          </span>
+          <span className="text-[11px] font-mono font-semibold text-[#F97316] bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
+            Judge
+          </span>
         </Link>
       </div>
 

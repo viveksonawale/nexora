@@ -1,6 +1,7 @@
 import { db } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
 import { AchievementKind, SkillLevel } from "@prisma/client";
+import { getUserPermissions } from "@/server/policies/rbac";
 
 export interface CompletenessResult {
   score: number;
@@ -147,6 +148,14 @@ export async function getMe(userId: string) {
     throw new AppError("NOT_FOUND", "User not found", 404);
   }
 
+  const permsSet = await getUserPermissions({
+    id: user.id,
+    email: user.email,
+    platformRole: user.platformRole,
+    status: user.status,
+    emailVerified: !!user.emailVerifiedAt,
+  });
+
   return {
     id: user.id,
     name: user.name,
@@ -156,16 +165,27 @@ export async function getMe(userId: string) {
     emailVerified: !!user.emailVerifiedAt,
     lastLoginAt: user.lastLoginAt,
     profile: user.profile,
-    orgMemberships: user.orgMemberships.map((m) => ({
-      orgId: m.organizationId,
-      role: m.role,
-      organization: m.organization,
-    })),
-    staffRoles: user.staffRoles.map((s) => ({
-      hackathonId: s.hackathonId,
-      role: s.role,
-      hackathon: s.hackathon,
-    })),
+    permissions: Array.from(permsSet),
+    orgMemberships: (user.platformRole === "SUPER_ADMIN" || user.onboardingStatus === "VERIFIED")
+      ? user.orgMemberships.map((m) => ({
+          organizationId: m.organizationId,
+          organizationSlug: m.organization.slug,
+          orgId: m.organizationId,
+          role: m.role,
+          organization: m.organization,
+        }))
+      : [],
+    staffRoles: (user.platformRole === "SUPER_ADMIN" || user.onboardingStatus === "VERIFIED")
+      ? user.staffRoles.map((s) => ({
+          hackathonId: s.hackathonId,
+          hackathonSlug: s.hackathon.slug,
+          role: s.role,
+          hackathon: s.hackathon,
+        }))
+      : [],
+    onboardingCompleted: user.profile?.onboardingCompleted ?? false,
+    onboardingStatus: user.onboardingStatus,
+    requestedRole: user.requestedRole,
   };
 }
 
@@ -216,22 +236,36 @@ export async function deleteMe(userId: string) {
 }
 
 export async function getFullProfile(userId: string) {
-  const profile = await db.profile.findUnique({
-    where: { userId },
-    include: {
-      education: { orderBy: { startYear: "desc" } },
-      experiences: { orderBy: { startDate: "desc" } },
-      projects: { orderBy: { createdAt: "desc" } },
-      achievements: { orderBy: { createdAt: "desc" } },
-      skills: {
-        include: { skill: true },
-        orderBy: { skill: { name: "asc" } },
+  const [profile, verification] = await Promise.all([
+    db.profile.findUnique({
+      where: { userId },
+      include: {
+        education: { orderBy: { startYear: "desc" } },
+        experiences: { orderBy: { startDate: "desc" } },
+        projects: { orderBy: { createdAt: "desc" } },
+        achievements: { orderBy: { createdAt: "desc" } },
+        skills: {
+          include: { skill: true },
+          orderBy: { skill: { name: "asc" } },
+        },
+        user: {
+          select: { id: true, name: true, email: true, platformRole: true },
+        },
       },
-      user: {
-        select: { id: true, name: true, email: true, platformRole: true },
+    }),
+    db.verificationRequest.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        idCardStorageKey: true,
+        status: true,
+        type: true,
+        createdAt: true,
+        reviewedAt: true,
       },
-    },
-  });
+    }),
+  ]);
 
   if (!profile) {
     throw new AppError("NOT_FOUND", "Profile not found", 404);
@@ -241,6 +275,16 @@ export async function getFullProfile(userId: string) {
 
   return {
     ...profile,
+    verification: verification
+      ? {
+          id: verification.id,
+          hasIdCard: !!verification.idCardStorageKey,
+          idCardStorageKey: verification.idCardStorageKey,
+          status: verification.status,
+          type: verification.type,
+          createdAt: verification.createdAt,
+        }
+      : null,
     completeness: { score, missing },
     skills: profile.skills.map((s) => ({
       id: s.skill.id,
@@ -267,6 +311,7 @@ export async function updateProfileBasics(
     twitterUrl?: string | null;
     lookingForTeam?: boolean;
     isPublic?: boolean;
+    idCardStorageKey?: string | null;
   }
 ) {
   let avatarUrl = data.avatarUrl;
@@ -278,6 +323,37 @@ export async function updateProfileBasics(
     if (file && file.publicUrl) {
       avatarUrl = file.publicUrl;
     }
+  }
+
+  if (data.idCardStorageKey) {
+    const existingReq = await db.verificationRequest.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingReq) {
+      await db.verificationRequest.update({
+        where: { id: existingReq.id },
+        data: {
+          idCardStorageKey: data.idCardStorageKey,
+          status: "APPROVED",
+        },
+      });
+    } else {
+      await db.verificationRequest.create({
+        data: {
+          userId,
+          type: "STUDENT",
+          status: "APPROVED",
+          idCardStorageKey: data.idCardStorageKey,
+        },
+      });
+    }
+
+    await db.user.update({
+      where: { id: userId },
+      data: { onboardingStatus: "VERIFIED" },
+    });
   }
 
   const profile = await db.profile.update({
@@ -859,7 +935,7 @@ export async function getResumeData(userId: string) {
         },
       },
       registrations: {
-        where: { status: "APPROVED" },
+        where: { status: "APPROVED", checkedInAt: { not: null } },
         include: {
           hackathon: {
             select: { id: true, title: true, slug: true, startsAt: true, endsAt: true },

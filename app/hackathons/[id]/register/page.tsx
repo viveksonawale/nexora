@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
 import { RequireAuth } from "@/components/shared/RequireAuth";
 import { LoadingState } from "@/components/shared/states";
@@ -13,13 +14,22 @@ function RegisterContent({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [hackathon, setHackathon] = useState<any>(null);
+  const [existingReg, setExistingReg] = useState<any>(null);
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    apiFetch(`/hackathons/${id}`)
-      .then((data: any) => setHackathon(data))
-      .catch((err) => setError(err.message))
+    Promise.all([
+      apiFetch(`/hackathons/${id}`).catch((err) => {
+        setError(err.message);
+        return null;
+      }),
+      apiFetch(`/hackathons/${id}/registrations/me`).catch(() => null),
+    ])
+      .then(([hackData, regData]) => {
+        if (hackData) setHackathon(hackData);
+        if (regData) setExistingReg(regData);
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -29,14 +39,16 @@ function RegisterContent({ id }: { id: string }) {
     setError("");
 
     try {
-      await apiFetch(`/hackathons/${id}/registrations`, {
+      const targetId = hackathon?.id || id;
+      await apiFetch(`/hackathons/${targetId}/registrations`, {
         method: "POST",
         body: JSON.stringify({ answers }),
       });
-      // Redirect to the "My Registration" tab (which doesn't exist yet, we will create Teams/My Registration)
       router.push(`/hackathons/${id}/teams`);
     } catch (err: any) {
-      if (err.message.includes("ONBOARDING_INCOMPLETE")) {
+      if (err.message?.includes("already registered")) {
+        router.push(`/hackathons/${id}/teams`);
+      } else if (err.message?.includes("ONBOARDING_INCOMPLETE")) {
         router.push(`/onboarding?returnUrl=/hackathons/${id}/register`);
       } else {
         setError(err.message || "Registration failed");
@@ -46,14 +58,58 @@ function RegisterContent({ id }: { id: string }) {
     }
   };
 
-  if (loading) return <LoadingState message="Loading registration form..." />;
+  if (loading) return <LoadingState message="Loading registration details..." />;
   if (error && !hackathon) return <div className="text-red-500 p-8">{error}</div>;
+
+  if (existingReg) {
+    return (
+      <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-3xl p-8 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-display font-bold text-[var(--text-primary)]">
+            Registration Status
+          </h2>
+          <p className="text-[var(--text-secondary)] font-sans">
+            You are registered for {hackathon?.title || "this hackathon"}.
+          </p>
+        </div>
+
+        <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-start gap-4">
+          <CheckCircle2 className="text-emerald-400 shrink-0 mt-1" size={26} />
+          <div className="space-y-1">
+            <h3 className="font-sans font-bold text-white text-base">You are officially registered!</h3>
+            <p className="text-sm text-zinc-300">
+              Registration Status:{" "}
+              <span className="font-semibold text-emerald-400 uppercase tracking-wide text-xs px-2 py-0.5 rounded-full bg-emerald-500/20">
+                {existingReg.status}
+              </span>
+            </p>
+            <p className="text-xs text-zinc-400 pt-1">
+              You can now create a team, invite your teammates, or join an existing team.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <Link href={`/hackathons/${id}/teams`} className="flex-1">
+            <ShinyButton variant="primary" className="w-full justify-center py-3.5">
+              Go to Team Management →
+            </ShinyButton>
+          </Link>
+          <Link href="/student" className="flex-1">
+            <ShinyButton variant="secondary" className="w-full justify-center py-3.5">
+              Student Dashboard
+            </ShinyButton>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-3xl p-8 space-y-8">
       <div className="space-y-2">
         <h2 className="text-3xl font-display font-bold text-[var(--text-primary)]">
-          Register for {hackathon.title}
+          Register for {hackathon?.title}
         </h2>
         <p className="text-[var(--text-secondary)] font-sans">
           Complete the form below to secure your spot.

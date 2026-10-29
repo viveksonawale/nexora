@@ -2,6 +2,7 @@
 
 import { ArrowRight, EyeOff, Lock, Sparkles, QrCode, CheckCircle2, Users, FileText, CalendarDays, BrainCircuit } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export function FeaturesGrid() {
   return (
@@ -38,9 +39,9 @@ export function FeaturesGrid() {
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
               Ensure a fair and unbiased evaluation process. Judges review submissions without knowing participant details.
             </p>
-            <a href="#" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
+            <Link href="/features" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
 
           {/* Mock UI */}
@@ -85,9 +86,9 @@ export function FeaturesGrid() {
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
               Handle registrations, team formation, scheduling, and announcements, all in one place. Built for colleges and large scale events.
             </p>
-            <a href="#" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
+            <Link href="/hackathons" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
 
           {/* Mock UI */}
@@ -158,9 +159,9 @@ export function FeaturesGrid() {
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
               Let AI generate concise and clear summaries of problem statements so participants can quickly understand and get started.
             </p>
-            <a href="#" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
+            <Link href="/features" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
 
           {/* Mock UI */}
@@ -204,9 +205,9 @@ export function FeaturesGrid() {
             <p className="font-sans text-[var(--text-secondary)] text-lg mb-6 leading-relaxed max-w-sm">
               Track participant attendance seamlessly with QR codes, real-time analytics, and instant reports.
             </p>
-            <a href="/attendance/select" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
+            <Link href="/attendance" className="inline-flex items-center gap-2 text-[#F97316] font-semibold hover:gap-3 transition-all">
               Learn more <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
 
           {/* Mock UI */}

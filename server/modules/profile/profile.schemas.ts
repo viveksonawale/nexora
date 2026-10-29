@@ -9,15 +9,16 @@ export const updateProfileSchema = z.object({
   bio: z.string().trim().max(1000).optional().nullable(),
   location: z.string().trim().max(100).optional().nullable(),
   avatarFileId: z.string().optional().nullable(),
-  avatarUrl: z.string().url().optional().nullable(),
-  contactEmail: z.string().trim().email().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
+  contactEmail: z.string().trim().email().optional().nullable().or(z.literal("")),
   showContactEmail: z.boolean().optional(),
-  githubUrl: z.string().url().optional().nullable(),
-  linkedinUrl: z.string().url().optional().nullable(),
-  portfolioUrl: z.string().url().optional().nullable(),
-  twitterUrl: z.string().url().optional().nullable(),
+  githubUrl: z.string().url().optional().nullable().or(z.literal("")),
+  linkedinUrl: z.string().url().optional().nullable().or(z.literal("")),
+  portfolioUrl: z.string().url().optional().nullable().or(z.literal("")),
+  twitterUrl: z.string().url().optional().nullable().or(z.literal("")),
   lookingForTeam: z.boolean().optional(),
   isPublic: z.boolean().optional(),
+  idCardStorageKey: z.string().optional().nullable(),
 });
 
 export const educationSchema = z.object({

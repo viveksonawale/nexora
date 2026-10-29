@@ -4,3 +4,7 @@ import { CertificateType } from "@prisma/client";
 export const IssueCertificatesSchema = z.object({
   types: z.array(z.nativeEnum(CertificateType)).min(1),
 });
+
+export const RevokeCertificateSchema = z.object({
+  reason: z.string().max(255).optional(),
+});

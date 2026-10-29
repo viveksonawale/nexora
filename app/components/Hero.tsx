@@ -5,9 +5,36 @@ import Image from "next/image";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { ShinyButton } from "./ShinyButton";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/contexts/SessionContext";
 
 export function Hero() {
   const router = useRouter();
+  const { user } = useSession();
+
+  const handleLaunch = () => {
+    if (user) {
+      if (user.platformRole === "SUPER_ADMIN") {
+        router.push("/admin");
+      } else if (user.onboardingStatus === "PENDING_VERIFICATION") {
+        const isStudent =
+          user.requestedRole === "STUDENT" ||
+          (!user.requestedRole && user.platformRole === "USER");
+        router.push(isStudent ? "/student" : "/onboarding/pending");
+      } else if (user.onboardingStatus !== "VERIFIED") {
+        router.push("/onboarding");
+      } else if (user.orgMemberships && user.orgMemberships.length > 0) {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard/organizations/create");
+      }
+    } else {
+      window.dispatchEvent(
+        new CustomEvent("open-auth-modal", {
+          detail: { tab: "signup", returnUrl: "/dashboard/organizations/create" },
+        })
+      );
+    }
+  };
   
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
@@ -96,7 +123,7 @@ export function Hero() {
           <ShinyButton 
             variant="primary" 
             size="lg"
-            onClick={() => window.dispatchEvent(new Event("open-auth-modal"))}
+            onClick={handleLaunch}
           >
             <span>Launch a Hackathon</span>
             <ArrowRight

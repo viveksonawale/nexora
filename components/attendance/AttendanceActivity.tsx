@@ -1,4 +1,4 @@
-interface ActivityItem {
+export interface ActivityItem {
   id: string;
   name: string;
   team: string;
@@ -15,14 +15,20 @@ const DEMO_ACTIVITY: ActivityItem[] = [
 
 import { SpotlightCard } from "@/app/components/SpotlightCard";
 
-export function AttendanceActivity() {
+interface AttendanceActivityProps {
+  activities?: ActivityItem[];
+}
+
+export function AttendanceActivity({ activities }: AttendanceActivityProps) {
+  const displayActivities = activities && activities.length > 0 ? activities : DEMO_ACTIVITY;
   return (
     <SpotlightCard spotlightColor="rgba(249, 115, 22, 0.15)" className="group border-[var(--border)] rounded-3xl bg-[var(--bg-elevated)]/40 backdrop-blur-md hover:border-[#F97316]/50 hover:bg-[var(--bg-elevated)]/60 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 overflow-hidden h-full">
       <div className="flex flex-col h-full">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#F97316]/5 rounded-full blur-3xl translate-y-1/2 translate-x-1/2 group-hover:bg-[#F97316]/15 transition-colors duration-500 pointer-events-none" />
       <div className="relative z-10 flex flex-col h-full">
-        <div className="p-5 border-b border-[var(--border)]">
+        <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
           <h3 className="font-sans text-lg font-medium text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors">Recent Activity</h3>
+          <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-wider">Live Log</span>
         </div>
         <div className="flex-1 overflow-y-auto p-0 scrollbar-hide">
           <table className="w-full text-left border-collapse">
@@ -34,7 +40,7 @@ export function AttendanceActivity() {
               </tr>
             </thead>
             <tbody>
-              {DEMO_ACTIVITY.map((activity) => (
+              {displayActivities.map((activity) => (
                 <tr key={activity.id} className="border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-canvas)]/80 transition-colors">
                   <td className="py-3 px-5 font-mono text-sm text-[var(--text-secondary)]">{activity.id}</td>
                   <td className="py-3 px-5">

@@ -44,9 +44,12 @@ export default function HackathonLayout({
 
   const tabs = [
     { name: "OVERVIEW", href: `/hackathons/${id}/overview` },
-    { name: "PRIZES", href: `/hackathons/${id}/prizes` },
+    { name: "CHECK-IN", href: `/hackathons/${id}/check-in` },
+    { name: "TEAMS", href: `/hackathons/${id}/teams` },
     { name: "SCHEDULE", href: `/hackathons/${id}/schedule` },
+    { name: "PRIZES", href: `/hackathons/${id}/prizes` },
     { name: "PROJECTS", href: `/hackathons/${id}/projects` },
+    { name: "SUBMISSION", href: `/hackathons/${id}/submission` },
   ];
 
   return (

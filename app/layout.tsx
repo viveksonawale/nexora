@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       data-theme="dark"
       suppressHydrationWarning
-      className={cn("h-full", "antialiased", inter.variable, playfair.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
+      className={cn("antialiased", inter.variable, playfair.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
     >
       <head>
         <Script

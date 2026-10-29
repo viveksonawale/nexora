@@ -26,8 +26,14 @@ export const JoinTeamSchema = z.object({
 export const InviteMemberSchema = z.object({
   userId: z.string().optional(),
   email: z.string().email().optional(),
-}).refine(data => data.userId || data.email, {
-  message: "Must provide either userId or email",
+  isShareLink: z.boolean().optional(),
+}).refine(data => data.userId || data.email || data.isShareLink, {
+  message: "Must provide either userId, email, or isShareLink",
+});
+
+export const CandidateSearchSchema = z.object({
+  q: z.string().min(1),
+  hackathonId: z.string().optional(),
 });
 
 export const TransferLeadershipSchema = z.object({

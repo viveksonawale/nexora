@@ -1,6 +1,22 @@
-export type PlatformRole = 'USER' | 'SUPER_ADMIN';
+export type PlatformRole = 'USER' | 'SUPER_ADMIN' | 'SUPPORT_ADMIN';
 export type OrgRole = 'OWNER' | 'ADMIN' | 'STAFF';
-export type HackathonStaffRole = 'JUDGE' | 'MENTOR' | 'VOLUNTEER';
+export type HackathonStaffRole =
+  | 'ORGANIZER'
+  | 'CO_ORGANIZER'
+  | 'REGISTRATION_MANAGER'
+  | 'EVENT_OPS'
+  | 'JUDGE'
+  | 'HEAD_JUDGE'
+  | 'SUBMISSION_REVIEWER'
+  | 'MENTOR'
+  | 'VOLUNTEER'
+  | 'SPONSOR_REP'
+  | 'PRIZE_MANAGER'
+  | 'COMMUNICATIONS_MANAGER'
+  | 'AUDITOR';
+
+export type OnboardingStatus = 'NOT_STARTED' | 'PENDING_VERIFICATION' | 'VERIFIED' | 'REJECTED';
+export type RequestedRole = 'STUDENT' | 'COLLEGE_ORGANIZER' | 'JUDGE';
 
 export interface SessionUser {
   id: string;
@@ -10,6 +26,9 @@ export interface SessionUser {
   emailVerified: boolean;
   status: 'ACTIVE' | 'SUSPENDED';
   onboardingCompleted: boolean;
+  onboardingStatus?: OnboardingStatus;
+  requestedRole?: RequestedRole | null;
+  permissions?: string[];
   orgMemberships: {
     organizationId: string;
     organizationSlug: string;
@@ -19,6 +38,11 @@ export interface SessionUser {
     hackathonId: string;
     hackathonSlug: string;
     role: HackathonStaffRole;
+    hackathon?: {
+      id: string;
+      title: string;
+      slug: string;
+    };
   }[];
 }
 

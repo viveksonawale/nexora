@@ -46,6 +46,7 @@ export async function registerUser(input: {
         passwordHash,
         platformRole: "USER",
         status: "ACTIVE",
+        emailVerifiedAt: new Date(),
       },
     });
 

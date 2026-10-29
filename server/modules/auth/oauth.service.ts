@@ -10,6 +10,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export class OAuthService {
   static getGoogleAuthUrl() {
+    if (env.NODE_ENV === "development" && (!env.GOOGLE_CLIENT_ID || env.GOOGLE_CLIENT_ID.startsWith("mock-"))) {
+      const callbackUrl = env.GOOGLE_REDIRECT_URI || `${env.APP_URL}/api/v1/auth/oauth/google/callback`;
+      return `${callbackUrl}?code=dev-mock-code`;
+    }
+
     const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
     const options = {
       redirect_uri: env.GOOGLE_REDIRECT_URI as string,
@@ -27,6 +32,19 @@ export class OAuthService {
   }
 
   static async getGoogleUser(code: string) {
+    if (code.startsWith("dev-") || (env.NODE_ENV === "development" && (!env.GOOGLE_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET.startsWith("mock-")))) {
+      return {
+        id: "google-dev-12345",
+        email: "google.user@example.com",
+        verified_email: true,
+        name: "Google Dev User",
+        given_name: "Google",
+        family_name: "User",
+        picture: "https://images.unsplash.com/photo-1534528741775-53994a69daeb",
+        locale: "en",
+      };
+    }
+
     const url = "https://oauth2.googleapis.com/token";
     const values = {
       code,

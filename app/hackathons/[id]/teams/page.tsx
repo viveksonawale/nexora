@@ -129,16 +129,21 @@ function TeamsContent({ id }: { id: string }) {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Link href={`/hackathons/${id}/submission`}>
             <ShinyButton variant="primary">Manage Submission</ShinyButton>
+          </Link>
+          <Link href="/student/teams">
+            <button className="px-6 py-3 border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-[#F97316] rounded-xl font-bold font-sans transition-colors flex items-center gap-2">
+              <Users size={18} /> Team Dashboard & Invites
+            </button>
           </Link>
           {!isLeader && (
             <button
               className="px-6 py-3 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-xl font-bold font-sans transition-colors flex items-center gap-2"
               onClick={async () => {
                 if (confirm("Leave this team?")) {
-                  await apiFetch(`/hackathons/${id}/teams/${myTeam.id}/leave`, { method: "POST" });
+                  await apiFetch(`/teams/${myTeam.id}/leave`, { method: "POST" });
                   fetchData();
                 }
               }}
@@ -172,7 +177,7 @@ function TeamsContent({ id }: { id: string }) {
           onSubmit={async (e: any) => {
             e.preventDefault();
             try {
-              await apiFetch(`/hackathons/${id}/teams/join`, {
+              await apiFetch("/teams/join", {
                 method: "POST",
                 body: JSON.stringify({ inviteCode: e.target.code.value }),
               });

@@ -15,6 +15,7 @@ datasource db {
 enum PlatformRole {
   USER
   SUPER_ADMIN
+  SUPPORT_ADMIN
 }
 
 enum UserStatus {
@@ -41,9 +42,19 @@ enum OrgRole {
 }
 
 enum HackathonStaffRole {
+  ORGANIZER
+  CO_ORGANIZER
+  REGISTRATION_MANAGER
+  EVENT_OPS
   JUDGE
+  HEAD_JUDGE
+  SUBMISSION_REVIEWER
   MENTOR
   VOLUNTEER
+  SPONSOR_REP
+  PRIZE_MANAGER
+  COMMUNICATIONS_MANAGER
+  AUDITOR
 }
 
 enum StaffStatus {
@@ -61,9 +72,34 @@ enum HackathonMode {
 
 enum HackathonStatus {
   DRAFT
-  PUBLISHED
-  CANCELLED
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  LIVE
+  SUBMISSION_CLOSED
+  JUDGING
+  RESULTS_PUBLISHED
   ARCHIVED
+  CANCELLED
+  PUBLISHED
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+enum RequestedRole {
+  STUDENT
+  COLLEGE_ORGANIZER
+  JUDGE
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Visibility {
@@ -78,6 +114,17 @@ enum RegistrationStatus {
   REJECTED
   WAITLISTED
   WITHDRAWN
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum AttendanceMethod {
+  QR
+  MANUAL
 }
 
 enum QuestionType {
@@ -144,9 +191,17 @@ enum AchievementKind {
 
 enum CertificateType {
   PARTICIPATION
+  ACHIEVEMENT
   WINNER
+  RUNNER_UP
   JUDGE
   MENTOR
+}
+
+enum CertificateStatus {
+  PENDING
+  ISSUED
+  REVOKED
 }
 
 enum FilePurpose {
@@ -156,6 +211,7 @@ enum FilePurpose {
   HACKATHON_LOGO
   SPONSOR_LOGO
   SUBMISSION_MEDIA
+  CERTIFICATE
 }
 
 enum FileStatus {
@@ -186,6 +242,8 @@ model User {
   name            String
   platformRole    PlatformRole @default(USER)
   status          UserStatus   @default(ACTIVE)
+  onboardingStatus OnboardingStatus @default(NOT_STARTED)
+  requestedRole    RequestedRole?
   lastLoginAt     DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -205,8 +263,13 @@ model User {
   announcements       Announcement[]
   notifications       Notification[]
   certificates        Certificate[]
+  createdAttendanceSessions AttendanceSession[] @relation("CreatedAttendanceSessions")
+  attendanceRecords         AttendanceRecord[]  @relation("UserAttendanceRecords")
+  markedAttendanceRecords   AttendanceRecord[]  @relation("MarkedByOrganizer")
   files               FileAsset[]
   auditLogs           AuditLog[]
+  verificationRequests         VerificationRequest[] @relation("UserVerificationRequests")
+  reviewedVerificationRequests VerificationRequest[] @relation("ReviewedVerificationRequests")
 
   @@index([status])
 }
@@ -276,8 +339,33 @@ model Organization {
   members    OrganizationMember[]
   hackathons Hackathon[]
   education  Education[]
+  verificationRequests VerificationRequest[]
 
   @@index([status])
+}
+
+model VerificationRequest {
+  id               String             @id @default(cuid())
+  userId           String
+  type             RequestedRole
+  status           VerificationStatus @default(PENDING)
+  organizationId   String?
+  details          Json?
+  idCardStorageKey String?
+  reviewerId       String?
+  rejectionReason  String?
+  reviewedAt       DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  user         User          @relation("UserVerificationRequests", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer     User?         @relation("ReviewedVerificationRequests", fields: [reviewerId], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([status, type])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([reviewerId])
 }
 
 model OrganizationMember {
@@ -478,6 +566,7 @@ model Hackathon {
   criteria      JudgingCriterion[]
   announcements Announcement[]
   certificates  Certificate[]
+  attendanceSessions AttendanceSession[]
 
   @@index([organizationId])
   @@index([status, visibility, startsAt])
@@ -618,6 +707,7 @@ model Registration {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkedInBy User?       @relation("CheckedInBy", fields: [checkedInById], references: [id], onDelete: SetNull)
   teamMember  TeamMember?
+  attendanceRecords AttendanceRecord[]
 
   @@unique([hackathonId, userId])
   @@unique([id, hackathonId])
@@ -826,6 +916,7 @@ model Notification {
   type      String
   title     String
   body      String?
+  link      String?
   data      Json?
   readAt    DateTime?
   createdAt DateTime  @default(now())
@@ -835,19 +926,85 @@ model Notification {
   @@index([userId, readAt, createdAt])
 }
 
+// ============================================================
+// DYNAMIC QR ATTENDANCE
+// ============================================================
+
+model AttendanceSession {
+  id             String        @id @default(cuid())
+  hackathonId    String
+  createdById    String
+  title          String
+  status         SessionStatus @default(ACTIVE)
+  startedAt      DateTime      @default(now())
+  endedAt        DateTime?
+  secret         String
+  displayKeyHash String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  hackathon Hackathon          @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
+  createdBy User               @relation("CreatedAttendanceSessions", fields: [createdById], references: [id], onDelete: Restrict)
+  records   AttendanceRecord[]
+
+  @@index([hackathonId, status])
+  @@index([createdById])
+  @@index([displayKeyHash])
+}
+
+model AttendanceRecord {
+  id             String           @id @default(cuid())
+  sessionId      String
+  userId         String
+  registrationId String
+  method         AttendanceMethod @default(QR)
+  markedById     String?
+  markedAt       DateTime         @default(now())
+
+  session      AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user         User              @relation("UserAttendanceRecords", fields: [userId], references: [id], onDelete: Cascade)
+  registration Registration      @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  markedBy     User?             @relation("MarkedByOrganizer", fields: [markedById], references: [id], onDelete: SetNull)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId, markedAt])
+  @@index([userId])
+  @@index([registrationId])
+}
+
 model Certificate {
-  id               String          @id @default(cuid())
+  id               String            @id @default(cuid())
+  certificateId    String            @unique
   hackathonId      String
   userId           String
   type             CertificateType
-  verificationCode String          @unique
-  issuedAt         DateTime        @default(now())
+  status           CertificateStatus @default(PENDING)
+  verificationCode String            @unique
+  issuedAt         DateTime          @default(now())
+  revokedAt        DateTime?
+  revocationReason String?
+  storageKey       String?
+
+  // Point-in-time snapshot fields
+  recipientName    String
+  hackathonTitle   String
+  collegeName      String
+  collegeLogoUrl   String?
+  startDate        DateTime
+  endDate          DateTime
+  format           String?
+  location         String?
+  teamName         String?
+  position         String?
+  signatories      Json?
 
   hackathon Hackathon @relation(fields: [hackathonId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([hackathonId, userId, type])
   @@index([userId])
+  @@index([hackathonId])
+  @@index([status])
 }
 
 model EmailOutbox {
@@ -904,4 +1061,46 @@ model AuditLog {
   @@index([hackathonId, createdAt])
   @@index([organizationId, createdAt])
   @@index([actorId])
+}
+
+// ============================================================
+// RBAC: ROLES & PERMISSIONS
+// ============================================================
+
+model Permission {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  category    String
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@index([category])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  scope       String   @default("EVENT") // "PLATFORM" or "EVENT"
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
 }

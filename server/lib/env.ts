@@ -25,11 +25,11 @@ const envSchema = z.object({
   UPLOAD_MAX_MEDIA_BYTES: z.coerce.number().default(10485760),
   UPLOAD_PRESIGN_TTL_SECONDS: z.coerce.number().default(300),
   
-  SMTP_HOST: z.string(),
-  SMTP_PORT: z.coerce.number(),
-  SMTP_USER: z.string(),
-  SMTP_PASSWORD: z.string(),
-  EMAIL_FROM: z.string(),
+  SMTP_HOST: z.string().default("localhost"),
+  SMTP_PORT: z.coerce.number().default(1025),
+  SMTP_USER: z.string().default(""),
+  SMTP_PASSWORD: z.string().default(""),
+  EMAIL_FROM: z.string().default("noreply@nexora.app"),
   
   CRON_SECRET: z.string().min(16),
   

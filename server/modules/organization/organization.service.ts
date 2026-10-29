@@ -16,6 +16,10 @@ export class OrganizationService {
    * Apply for a new organization.
    */
   static async createOrganization(user: AuthUser, data: z.infer<typeof CreateOrganizationSchema>) {
+    if (user.platformRole !== "SUPER_ADMIN" && user.onboardingStatus && user.onboardingStatus !== "VERIFIED") {
+      throw AppError.forbidden("Organizer verification is required to create an organization.");
+    }
+
     if (!can(user, "org:create")) {
       throw AppError.forbidden("You must verify your email to create an organization.");
     }
@@ -245,6 +249,10 @@ export class OrganizationService {
    * Get organizations for the logged-in user.
    */
   static async getUserOrganizations(user: AuthUser) {
+    if (user.platformRole !== "SUPER_ADMIN" && user.onboardingStatus && user.onboardingStatus !== "VERIFIED") {
+      return [];
+    }
+
     const memberships = await db.organizationMember.findMany({
       where: { userId: user.id },
       include: {

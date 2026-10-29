@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withApi } from "@/server/lib/api";
 import { OAuthService } from "@/server/modules/auth/oauth.service";
+import { setAuthCookies } from "@/server/modules/auth/tokens";
 import { env } from "@/server/lib/env";
 
 export const GET = withApi({ auth: "public" }, async (req, ctx) => {
@@ -13,7 +14,7 @@ export const GET = withApi({ auth: "public" }, async (req, ctx) => {
   }
 
   if (!code) {
-    return NextResponse.redirect(`${env.APP_URL}/sign-in?error=oauth_failed`);
+    return NextResponse.redirect(`${env.APP_URL}/?auth=login&error=oauth_failed`);
   }
 
   try {
@@ -21,29 +22,14 @@ export const GET = withApi({ auth: "public" }, async (req, ctx) => {
 
     const response = NextResponse.redirect(`${env.APP_URL}/hackathons`);
 
-    response.cookies.set({
-      name: "access_token",
-      value: accessToken,
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 15 * 60, // 15 mins
-      path: "/",
-    });
-
-    response.cookies.set({
-      name: "refresh_token",
-      value: refreshToken,
-      httpOnly: true,
-      secure: env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: "/api/v1/auth/refresh",
+    setAuthCookies(response, {
+      accessToken,
+      refreshToken,
     });
 
     return response;
   } catch (error) {
     console.error("OAuth callback error:", error);
-    return NextResponse.redirect(`${env.APP_URL}/sign-in?error=oauth_failed`);
+    return NextResponse.redirect(`${env.APP_URL}/?auth=login&error=oauth_failed`);
   }
 });

@@ -56,12 +56,14 @@ export default function FeatureSection() {
           NEXORA is an advanced hackathon management system. Streamline registrations, team formations, and project submissions seamlessly.
         </p>
         <div className="flex flex-wrap items-center gap-4">
-          <Link href="#get-started">
-            <ShinyButton variant="primary" size="md">
-              Get Started
-            </ShinyButton>
-          </Link>
-          <Link href="#learn-more">
+          <ShinyButton
+            variant="primary"
+            size="md"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-auth-modal", { detail: { tab: "signup" } }))}
+          >
+            Get Started
+          </ShinyButton>
+          <Link href="/features">
             <ShinyButton variant="secondary" size="md">
               Learn More
             </ShinyButton>

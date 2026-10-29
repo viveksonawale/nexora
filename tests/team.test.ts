@@ -20,6 +20,7 @@ vi.mock("../server/lib/db", () => {
       },
       hackathon: {
         findUnique: vi.fn(),
+        findFirst: vi.fn(),
       }
     }
   };
@@ -37,8 +38,9 @@ describe("Team Service Rules", () => {
       lookingForMembers: false,
     } as any);
 
-    vi.mocked(db.hackathon.findUnique).mockResolvedValue({
+    vi.mocked(db.hackathon.findFirst).mockResolvedValue({
       id: "h1",
+      status: "REGISTRATION_OPEN",
       maxTeamSize: 4,
       submissionDeadline: new Date(Date.now() + 86400000), // Future
     } as any);
@@ -49,7 +51,7 @@ describe("Team Service Rules", () => {
       teamMember: { id: "tm1", teamId: "some-other-team" } // Already in a team
     } as any);
 
-    await expect(TeamService.joinWithCode(user, { code: "CODE123" })).rejects.toThrowError(
+    await expect(TeamService.joinWithCode(user, { inviteCode: "CODE123" })).rejects.toThrowError(
       new AppError("BUSINESS_RULE", "You are already in a team.")
     );
   });
@@ -60,16 +62,18 @@ describe("Team Service Rules", () => {
     vi.mocked(db.team.findUnique).mockResolvedValue({
       id: "team1",
       hackathonId: "h1",
+      inviteCode: "CODE123",
       leaderId: "l1",
     } as any);
 
-    vi.mocked(db.hackathon.findUnique).mockResolvedValue({
+    vi.mocked(db.hackathon.findFirst).mockResolvedValue({
       id: "h1",
+      status: "REGISTRATION_OPEN",
       maxTeamSize: 4,
       submissionDeadline: new Date(Date.now() - 86400000), // Past
     } as any);
 
-    await expect(TeamService.joinWithCode(user, { code: "CODE123" })).rejects.toThrowError(
+    await expect(TeamService.joinWithCode(user, { inviteCode: "CODE123" })).rejects.toThrowError(
       new AppError("BUSINESS_RULE", "Team modifications are locked after the submission deadline.")
     );
   });

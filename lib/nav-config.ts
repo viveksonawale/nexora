@@ -39,9 +39,10 @@ export const NAV_CONFIG: NavConfig = {
     { label: 'Organization Settings', route: '/dashboard/settings', requiredPermission: 'ADMIN' }
   ],
   organizerHackathon: [
-    { label: '< Back to hackathons', route: '/dashboard/hackathons' },
+    { label: '< Back to dashboard', route: '/dashboard' },
     { label: 'Overview', route: 'overview' },
     { label: 'Setup', route: 'setup', requiredPermission: 'ADMIN' },
+    { label: 'Staff & Roles', route: 'roles', requiredPermission: 'ADMIN' },
     { label: 'Registrations', route: 'registrations' },
     { label: 'Teams', route: 'teams' },
     { label: 'Submissions', route: 'submissions' },

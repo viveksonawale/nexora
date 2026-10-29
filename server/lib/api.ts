@@ -7,7 +7,7 @@ import { verifyAccessToken } from "@/server/modules/auth/tokens";
 import { db } from "./db";
 import { AuthUser, RequestAuthContext } from "@/server/policies/policy";
 
-export type AuthRequirement = "public" | "user" | "verified" | "superAdmin";
+export type AuthRequirement = "public" | "user" | "verified" | "superAdmin" | "supportAdmin";
 
 export interface ApiHandlerOptions {
   auth?: AuthRequirement;
@@ -55,16 +55,18 @@ export function withApi(
         const payload = await verifyAccessToken(token);
         const dbUser = await db.user.findUnique({
           where: { id: payload.userId },
-          select: { id: true, email: true, platformRole: true, status: true, emailVerifiedAt: true },
+          select: { id: true, email: true, name: true, platformRole: true, status: true, emailVerifiedAt: true, onboardingStatus: true },
         });
 
         if (dbUser) {
           authUser = {
             id: dbUser.id,
             email: dbUser.email,
+            name: dbUser.name,
             platformRole: dbUser.platformRole,
             status: dbUser.status,
             emailVerified: !!dbUser.emailVerifiedAt,
+            onboardingStatus: dbUser.onboardingStatus,
           };
         }
       } catch {
@@ -146,6 +148,23 @@ export function withApi(
             error: {
               code: "FORBIDDEN",
               message: "Super admin permissions required",
+              requestId,
+            },
+          },
+          { status: 403, headers: { "X-Request-Id": requestId } }
+        );
+      }
+
+      if (
+        requiredAuth === "supportAdmin" &&
+        authUser.platformRole !== "SUPER_ADMIN" &&
+        authUser.platformRole !== "SUPPORT_ADMIN"
+      ) {
+        return NextResponse.json(
+          {
+            error: {
+              code: "FORBIDDEN",
+              message: "Platform support admin permissions required",
               requestId,
             },
           },

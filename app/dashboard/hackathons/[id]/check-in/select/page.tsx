@@ -1,13 +1,16 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
-import { Navbar } from "@/app/components/Navbar";
 import { SpotlightCard } from "@/app/components/SpotlightCard";
 import { ArrowRight, Settings, Scan } from "lucide-react";
 
-export default function RoleSelectionPage() {
+export default function RoleSelectionPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+
   return (
     <div className="min-h-screen bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <Navbar />
-      <div className="relative pt-32 pb-16 px-6 md:px-12 flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="relative pt-16 pb-16 px-6 md:px-12 flex flex-col items-center justify-center min-h-[80vh]">
         
         {/* Ambient glow blobs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -26,38 +29,38 @@ export default function RoleSelectionPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full relative z-10">
           
-          {/* Admin Card */}
-          <Link href="/attendance" className="block w-full outline-none">
+          {/* Admin / Organizer Card */}
+          <Link href={`/dashboard/hackathons/${id}/check-in`} className="block w-full outline-none">
             <SpotlightCard spotlightColor="rgba(249, 115, 22, 0.2)" className="h-full p-8 md:p-10 border-[var(--border)] rounded-3xl bg-[var(--bg-elevated)]/40 backdrop-blur-md hover:border-[#F97316]/50 hover:bg-[var(--bg-elevated)]/60 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 group">
               <div className="w-14 h-14 rounded-2xl bg-[#F97316]/10 text-[#F97316] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Settings size={28} />
               </div>
               <h3 className="font-display text-2xl font-bold mb-4 text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors">
-                Admin
+                Organizer Display
               </h3>
               <p className="font-sans text-[var(--text-secondary)] mb-8 leading-relaxed">
-                Create and control live attendance sessions, display the active QR code, and monitor participation.
+                Control the live attendance session, display the rotating dynamic QR code on the venue screen, and track attendee metrics.
               </p>
               <div className="inline-flex items-center gap-2 text-[#F97316] font-semibold group-hover:gap-3 transition-all">
-                Continue as Admin <ArrowRight size={18} />
+                Launch Control Center <ArrowRight size={18} />
               </div>
             </SpotlightCard>
           </Link>
 
-          {/* Student Card */}
-          <Link href="/attendance/student" className="block w-full outline-none">
+          {/* Student / Participant Card */}
+          <Link href={`/hackathons/${id}/check-in`} className="block w-full outline-none">
             <SpotlightCard spotlightColor="rgba(249, 115, 22, 0.2)" className="h-full p-8 md:p-10 border-[var(--border)] rounded-3xl bg-[var(--bg-elevated)]/40 backdrop-blur-md hover:border-[#F97316]/50 hover:bg-[var(--bg-elevated)]/60 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 group">
               <div className="w-14 h-14 rounded-2xl bg-[#F97316]/10 text-[#F97316] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Scan size={28} />
               </div>
               <h3 className="font-display text-2xl font-bold mb-4 text-[var(--text-primary)] group-hover:text-[#F97316] transition-colors">
-                Student
+                Student Scanner
               </h3>
               <p className="font-sans text-[var(--text-secondary)] mb-8 leading-relaxed">
-                Scan the active attendance QR code to securely mark your participation.
+                Scan the active rotating attendance QR code displayed on screen to verify and confirm your event participation.
               </p>
               <div className="inline-flex items-center gap-2 text-[#F97316] font-semibold group-hover:gap-3 transition-all">
-                Continue as Student <ArrowRight size={18} />
+                Open Camera Scanner <ArrowRight size={18} />
               </div>
             </SpotlightCard>
           </Link>

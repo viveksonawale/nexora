@@ -32,6 +32,7 @@ class MemoryRateLimiter {
 
 let authLimiter: { limit: (id: string) => Promise<{ success: boolean; limit?: number; remaining?: number; reset?: number }> };
 let apiLimiter: { limit: (id: string) => Promise<{ success: boolean; limit?: number; remaining?: number; reset?: number }> };
+const verifyLimiter = new MemoryRateLimiter(30, 60);
 
 if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN && env.NODE_ENV !== "test") {
   const redis = new Redis({
@@ -60,4 +61,8 @@ if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN && env.NODE_ENV !
 export async function checkRateLimit(identifier: string, isAuthRoute = false) {
   const limiter = isAuthRoute ? authLimiter : apiLimiter;
   return limiter.limit(identifier);
+}
+
+export async function checkVerifyRateLimit(identifier: string) {
+  return verifyLimiter.limit(`verify:${identifier}`);
 }

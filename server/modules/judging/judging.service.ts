@@ -9,6 +9,8 @@ import {
   AwardPrizeSchema,
   LockJudgingSchema,
 } from "./judging.schemas";
+import { HackathonStatus } from "@prisma/client";
+import { HackathonLifecycle } from "@/server/modules/hackathon/hackathon-lifecycle";
 
 export class JudgingService {
   private static async getHackathonAndVerifyAdmin(user: AuthUser, hackathonId: string) {
@@ -18,10 +20,29 @@ export class JudgingService {
     });
     if (!hackathon) throw AppError.notFound("Hackathon not found");
 
+    if (user.platformRole === "SUPER_ADMIN") {
+      return hackathon;
+    }
+
     const membership = await db.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: hackathon.organizationId, userId: user.id } },
     });
-    if (!can(user, "hackathon:update", { orgRole: membership?.role })) {
+
+    const staffMember = await db.hackathonStaff.findFirst({
+      where: {
+        hackathonId,
+        userId: user.id,
+        role: { in: ["ORGANIZER", "HEAD_JUDGE"] },
+        status: "ACTIVE",
+      },
+    });
+
+    if (
+      !can(user, "hackathon:update", {
+        orgRole: membership?.role,
+        staffRoles: staffMember ? [staffMember.role] : [],
+      })
+    ) {
       throw AppError.forbidden("Permission denied.");
     }
     return hackathon;
@@ -106,10 +127,26 @@ export class JudgingService {
     const membership = await db.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: hackathon.organizationId, userId: user.id } },
     });
-    if (!can(user, "hackathon:read", { orgRole: membership?.role })) throw AppError.forbidden("Denied");
+    const staffRole = await db.hackathonStaff.findFirst({
+      where: {
+        hackathonId,
+        userId: user.id,
+        role: { in: ["ORGANIZER", "CO_ORGANIZER", "HEAD_JUDGE", "AUDITOR"] },
+        status: "ACTIVE",
+      },
+    });
+
+    if (
+      !can(user, "judging:aggregate", {
+        orgRole: membership?.role,
+        staffRoles: staffRole ? [staffRole.role] : [],
+      })
+    ) {
+      throw AppError.forbidden("Access denied to aggregate judging metrics.");
+    }
 
     const judges = await db.hackathonStaff.findMany({
-      where: { hackathonId, role: "JUDGE" },
+      where: { hackathonId, role: { in: ["JUDGE", "HEAD_JUDGE"] } },
       include: {
         user: { select: { name: true, email: true } },
         judgeAssignments: {
@@ -134,7 +171,23 @@ export class JudgingService {
     const membership = await db.organizationMember.findUnique({
       where: { organizationId_userId: { organizationId: hackathon.organizationId, userId: user.id } },
     });
-    if (!can(user, "hackathon:read", { orgRole: membership?.role })) throw AppError.forbidden("Denied");
+    const staffRole = await db.hackathonStaff.findFirst({
+      where: {
+        hackathonId,
+        userId: user.id,
+        role: { in: ["ORGANIZER", "CO_ORGANIZER", "HEAD_JUDGE", "AUDITOR"] },
+        status: "ACTIVE",
+      },
+    });
+
+    if (
+      !can(user, "judging:aggregate", {
+        orgRole: membership?.role,
+        staffRoles: staffRole ? [staffRole.role] : [],
+      })
+    ) {
+      throw AppError.forbidden("Access denied to leaderboard.");
+    }
 
     const submissions = await db.submission.findMany({
       where: { hackathonId, status: "SUBMITTED" },
@@ -219,7 +272,7 @@ export class JudgingService {
   static async getMyJudgingHackathons(user: AuthUser) {
     return db.hackathon.findMany({
       where: {
-        staff: { some: { userId: user.id, role: "JUDGE", status: "ACTIVE" } },
+        staff: { some: { userId: user.id, role: { in: ["JUDGE", "HEAD_JUDGE"] }, status: "ACTIVE" } },
       },
     });
   }
@@ -228,7 +281,9 @@ export class JudgingService {
     const staff = await db.hackathonStaff.findFirst({
       where: { hackathonId, userId: user.id, status: "ACTIVE" },
     });
-    if (!staff || staff.role !== "JUDGE") throw AppError.forbidden("Not a judge.");
+    if (!staff || (staff.role !== "JUDGE" && staff.role !== "HEAD_JUDGE")) {
+      throw AppError.forbidden("Not a designated judge for this hackathon.");
+    }
 
     return db.judgeAssignment.findMany({
       where: { staffId: staff.id },
@@ -250,7 +305,9 @@ export class JudgingService {
       },
     });
     if (!assignment) throw AppError.notFound("Assignment not found");
-    if (assignment.staff.userId !== user.id) throw AppError.forbidden("Not your assignment");
+    if (assignment.staff.userId !== user.id && user.platformRole !== "SUPER_ADMIN") {
+      throw AppError.forbidden("Not your assigned evaluation.");
+    }
 
     // Mask team fields from judge
     (assignment.submission as any).teamId = undefined;
@@ -264,11 +321,20 @@ export class JudgingService {
       include: { staff: true, submission: true },
     });
     if (!assignment) throw AppError.notFound("Assignment not found");
-    if (assignment.staff.userId !== user.id) throw AppError.forbidden("Not your assignment");
+    if (assignment.staff.userId !== user.id && user.platformRole !== "SUPER_ADMIN") {
+      throw AppError.forbidden("Not your assignment");
+    }
     if (assignment.finalizedAt !== null) throw AppError.businessRule("INVALID_STATE", "Already finalized.");
 
     const hackathon = await db.hackathon.findUnique({ where: { id: assignment.submission.hackathonId } });
-    if (hackathon?.judgingLockedAt) throw AppError.businessRule("JUDGING_LOCKED", "Judging is locked.");
+    if (!hackathon) throw AppError.notFound("Hackathon not found");
+    if (hackathon.judgingLockedAt) throw AppError.businessRule("JUDGING_LOCKED", "Judging is locked.");
+
+    HackathonLifecycle.assertState(
+      hackathon.status,
+      [HackathonStatus.JUDGING, HackathonStatus.PUBLISHED],
+      "Score Evaluation"
+    );
 
     return db.$transaction(async (tx) => {
       // Clear old scores
@@ -299,6 +365,16 @@ export class JudgingService {
     if (!assignment) throw AppError.notFound("Assignment not found");
     if (assignment.staff.userId !== user.id) throw AppError.forbidden("Not your assignment");
     if (assignment.finalizedAt !== null) throw AppError.businessRule("INVALID_STATE", "Already finalized.");
+
+    const hackathon = await db.hackathon.findUnique({ where: { id: assignment.submission.hackathonId } });
+    if (!hackathon) throw AppError.notFound("Hackathon not found");
+    if (hackathon.judgingLockedAt) throw AppError.businessRule("JUDGING_LOCKED", "Judging is locked.");
+
+    HackathonLifecycle.assertState(
+      hackathon.status,
+      [HackathonStatus.JUDGING, HackathonStatus.PUBLISHED],
+      "Finalize Evaluation"
+    );
 
     // Validate all criteria are scored
     const criteriaCount = await db.judgingCriterion.count({ where: { hackathonId: assignment.submission.hackathonId } });

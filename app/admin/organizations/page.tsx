@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import { LoadingState } from "@/components/shared/states";
 import { ShinyButton } from "@/app/components/ShinyButton";
-import { Building2, CheckCircle2, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 
 export default function AdminOrganizationsPage() {
   const [orgs, setOrgs] = useState<any[]>([]);
@@ -29,13 +29,29 @@ export default function AdminOrganizationsPage() {
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
-      await apiFetch(`/admin/organizations/${id}/status`, {
-        method: "PUT",
-        body: JSON.stringify({ status }),
+      const endpoint = status === "ACTIVE"
+        ? `/admin/organizations/${id}/approve`
+        : `/admin/organizations/${id}/suspend`;
+      await apiFetch(endpoint, {
+        method: "POST",
       });
       fetchData();
     } catch (err: any) {
       alert(err.message || "Failed to update");
+    }
+  };
+
+  const handleDeleteOrg = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete organization "${name}" and all its hackathons?`)) {
+      return;
+    }
+    try {
+      await apiFetch(`/admin/organizations/${id}`, {
+        method: "DELETE",
+      });
+      fetchData();
+    } catch (err: any) {
+      alert(err.message || "Failed to delete organization");
     }
   };
 
@@ -123,10 +139,17 @@ export default function AdminOrganizationsPage() {
                       </button>
                     )}
                     {org.status === 'SUSPENDED' && (
-                      <button onClick={() => handleUpdateStatus(org.id, "APPROVED")} className="text-xs font-bold px-3 py-1.5 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors">
+                      <button onClick={() => handleUpdateStatus(org.id, "ACTIVE")} className="text-xs font-bold px-3 py-1.5 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors">
                         Reactivate
                       </button>
                     )}
+                    <button
+                      onClick={() => handleDeleteOrg(org.id, org.name)}
+                      className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors border border-red-500/20 ml-2"
+                      title="Delete Organization"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </td>
                 </tr>
               ))

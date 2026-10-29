@@ -9,14 +9,22 @@ import {
   DisqualifySchema,
 } from "./submission.schemas";
 import { randomBytes } from "crypto";
-import { SubmissionStatus } from "@prisma/client";
+import { SubmissionStatus, HackathonStatus } from "@prisma/client";
+import { HackathonLifecycle } from "@/server/modules/hackathon/hackathon-lifecycle";
 
 export class SubmissionService {
   private static async ensureNotLocked(hackathonId: string) {
     const hackathon = await db.hackathon.findUnique({ where: { id: hackathonId } });
     if (!hackathon) throw AppError.notFound("Hackathon not found");
+
+    HackathonLifecycle.assertState(
+      hackathon.status,
+      [HackathonStatus.LIVE, HackathonStatus.PUBLISHED],
+      "Project Submission"
+    );
+
     if (hackathon.submissionDeadline && new Date() > hackathon.submissionDeadline) {
-      throw AppError.businessRule("SUBMISSION_LOCKED", "Submissions are locked after the deadline.");
+      throw AppError.conflict("Submissions are locked after the deadline.");
     }
     return hackathon;
   }
@@ -141,6 +149,10 @@ export class SubmissionService {
 
     const isMember = sub.team.members.some(m => m.registration.userId === user.id);
     if (!isMember) throw AppError.forbidden("Only team members can submit.");
+
+    if (sub.team.leaderId !== user.id) {
+      throw AppError.forbidden("Only the team leader can submit the project.");
+    }
 
     await this.ensureNotLocked(sub.hackathonId);
 

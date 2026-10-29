@@ -1,19 +1,29 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "lenis/dist/lenis.css";
+
+html {
+  scroll-behavior: smooth;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto !important;
+}
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  --bg-canvas: #faf8f4;
-  --bg-elevated: #f1ede4;
-  --bg-inverse: #14130f;
-  --text-primary: #14130f;
-  --text-secondary: #5c584d;
-  --text-inverse: #faf8f4;
-  --accent: oklch(0.97 0 0);
-  --accent-soft: #f3e2d8;
-  --border: oklch(0.922 0 0);
+  --bg-canvas: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-inverse: #0f172a;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-inverse: #f8fafc;
+  --accent: #F97316;
+  --accent-soft: #ffedd5;
+  --border: #e2e8f0;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -47,15 +57,15 @@
 }
 
 :root[data-theme="dark"] {
-  --bg-canvas: #121110;
-  --bg-elevated: #1c1a17;
-  --bg-inverse: #faf8f4;
-  --text-primary: #f1ede4;
-  --text-secondary: #a39e8f;
-  --text-inverse: #14130f;
+  --bg-canvas: #0e0f12;
+  --bg-elevated: #16171d;
+  --bg-inverse: #f8fafc;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-inverse: #0f172a;
   --accent: #F97316;
   --accent-soft: #2b1f18;
-  --border: #2a2722;
+  --border: #22252e;
 }
 
 @theme inline {

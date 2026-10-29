@@ -53,7 +53,13 @@ export async function processOutboxBatch(batchSize = 20): Promise<{ processed: n
 
   for (const item of pendingEmails) {
     try {
-      if (env.NODE_ENV !== "test" && env.SMTP_HOST !== "localhost") {
+      const isEmailConfigured =
+        env.NODE_ENV !== "test" &&
+        env.SMTP_HOST !== "localhost" &&
+        Boolean(env.SMTP_USER) &&
+        Boolean(env.SMTP_PASSWORD);
+
+      if (isEmailConfigured) {
         const mail = getMailTransporter();
         const payload = (item.payload || {}) as Record<string, unknown>;
         
@@ -74,6 +80,11 @@ export async function processOutboxBatch(batchSize = 20): Promise<{ processed: n
           subject,
           text,
         });
+      } else {
+        logger.info(
+          { to: item.toEmail, template: item.template },
+          "Email sending is temporarily disabled/mocked. Marked as sent in outbox."
+        );
       }
 
       await db.emailOutbox.update({

@@ -2,6 +2,7 @@ import { db } from "@/server/lib/db";
 import { AppError } from "@/server/lib/errors";
 import { AuthUser, can } from "@/server/policies/policy";
 import { HackathonStatus, OrganizationStatus } from "@prisma/client";
+import { HackathonLifecycle } from "./hackathon-lifecycle";
 import { z } from "zod";
 import {
   CreateHackathonSchema,
@@ -201,10 +202,16 @@ export class HackathonService {
     return hackathon;
   }
 
+  static async transitionState(user: AuthUser, id: string, targetState: HackathonStatus, notes?: string) {
+    return HackathonLifecycle.transition(user, id, targetState, notes);
+  }
+
   static async publishHackathon(user: AuthUser, id: string) {
     const hackathon = await this.getHackathonAndVerifyAdmin(user, id);
     
-    if (hackathon.status === "PUBLISHED") throw AppError.businessRule("INVALID_STATE", "Already published");
+    if (hackathon.status === "PUBLISHED" || hackathon.status === "REGISTRATION_OPEN") {
+      throw AppError.businessRule("INVALID_STATE", "Already published/open");
+    }
     
     // Completeness validations
     if (!hackathon.tagline || !hackathon.description || !hackathon.bannerUrl) {
@@ -214,15 +221,14 @@ export class HackathonService {
       throw AppError.businessRule("INVALID_STATE", "Please set registration and submission deadlines before publishing.");
     }
 
-    return db.hackathon.update({
-      where: { id },
-      data: { status: HackathonStatus.PUBLISHED },
-    });
+    return HackathonLifecycle.transition(user, id, HackathonStatus.REGISTRATION_OPEN);
   }
 
   static async unpublishHackathon(user: AuthUser, id: string) {
     const hackathon = await this.getHackathonAndVerifyAdmin(user, id);
-    if (hackathon.status !== "PUBLISHED") throw AppError.businessRule("INVALID_STATE", "Not published");
+    if (hackathon.status !== "PUBLISHED" && hackathon.status !== "REGISTRATION_OPEN") {
+      throw AppError.businessRule("INVALID_STATE", "Not published or registration open");
+    }
     
     const approvedCount = await db.registration.count({ where: { hackathonId: id, status: "APPROVED" } });
     if (approvedCount > 0) throw AppError.businessRule("INVALID_STATE", "Cannot unpublish a hackathon with approved registrations.");
@@ -234,19 +240,11 @@ export class HackathonService {
   }
 
   static async cancelHackathon(user: AuthUser, id: string) {
-    await this.getHackathonAndVerifyAdmin(user, id);
-    return db.hackathon.update({
-      where: { id },
-      data: { status: HackathonStatus.CANCELLED },
-    });
+    return HackathonLifecycle.transition(user, id, HackathonStatus.CANCELLED);
   }
 
   static async archiveHackathon(user: AuthUser, id: string) {
-    await this.getHackathonAndVerifyAdmin(user, id);
-    return db.hackathon.update({
-      where: { id },
-      data: { status: HackathonStatus.ARCHIVED },
-    });
+    return HackathonLifecycle.transition(user, id, HackathonStatus.ARCHIVED);
   }
 
   static async cloneHackathon(user: AuthUser, id: string) {

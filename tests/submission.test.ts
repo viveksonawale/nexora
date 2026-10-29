@@ -29,12 +29,14 @@ describe("Submission Service Rules", () => {
       id: "sub1",
       hackathonId: "h1",
       team: {
+        leaderId: "u1",
         members: [{ registration: { userId: "u1" } }]
       }
     } as any);
 
     vi.mocked(db.hackathon.findUnique).mockResolvedValue({
       id: "h1",
+      status: "PUBLISHED",
       submissionDeadline: new Date(Date.now() - 86400000), // Past deadline
     } as any);
 

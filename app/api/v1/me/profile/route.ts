@@ -13,3 +13,5 @@ export const PUT = withApi({ auth: "user" }, async (req, ctx) => {
   const result = await updateProfileBasics(ctx.user!.id, input);
   return jsonResponse(result);
 });
+
+export const PATCH = PUT;

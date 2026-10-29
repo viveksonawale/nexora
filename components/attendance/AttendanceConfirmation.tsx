@@ -5,7 +5,17 @@ import { CheckCircle2, Sparkles, User, Calendar } from "lucide-react";
 import { SpotlightCard } from "@/app/components/SpotlightCard";
 import { getRandomNexoraNote } from "@/lib/attendance/attendance-messages";
 
-export function AttendanceConfirmation() {
+interface AttendanceConfirmationProps {
+  participantName?: string;
+  hackathonTitle?: string;
+  checkedInTime?: string;
+}
+
+export function AttendanceConfirmation({
+  participantName,
+  hackathonTitle,
+  checkedInTime,
+}: AttendanceConfirmationProps = {}) {
   const [note, setNote] = useState<string | null>(null);
 
   useEffect(() => {
@@ -33,7 +43,7 @@ export function AttendanceConfirmation() {
             Attendance<br />Confirmed
           </h2>
           <p className="font-sans text-sm md:text-base text-[var(--text-secondary)] font-medium relative z-10">
-            You're checked in for the session
+            You're checked in for the event
           </p>
         </div>
 
@@ -45,7 +55,9 @@ export function AttendanceConfirmation() {
             </div>
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Participant</div>
-              <div className="font-sans text-sm md:text-base font-bold text-[var(--text-primary)]">Demo Developer</div>
+              <div className="font-sans text-sm md:text-base font-bold text-[var(--text-primary)]">
+                {participantName || "Registered Developer"}
+              </div>
             </div>
           </div>
           
@@ -54,8 +66,10 @@ export function AttendanceConfirmation() {
               <Calendar size={18} className="text-[var(--text-primary)]" />
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Session</div>
-              <div className="font-sans text-sm md:text-base font-bold text-[var(--text-primary)]">Hackathon 2026 - Day 1</div>
+              <div className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-secondary)] mb-0.5">Event</div>
+              <div className="font-sans text-sm md:text-base font-bold text-[var(--text-primary)]">
+                {hackathonTitle || "Nexora Hackathon"}
+              </div>
             </div>
           </div>
         </div>
@@ -79,7 +93,7 @@ export function AttendanceConfirmation() {
           
           <div className="mt-8 pt-6 border-t border-[var(--border)] border-dashed text-center relative z-10">
             <div className="font-mono text-[10px] font-medium text-[var(--text-secondary)] opacity-60 flex items-center justify-center gap-2">
-              <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>{checkedInTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               <span>•</span>
               <span className="uppercase">NX-ATT-CONF</span>
             </div>

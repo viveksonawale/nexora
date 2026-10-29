@@ -13,12 +13,12 @@ describe("Registration Service - Concurrency", () => {
     // Attempt to seed data for test if DB is available
     try {
       const u = await db.user.create({
-        data: { email: `testadmin_${Date.now()}@example.com`, name: "Admin", role: "ADMIN" }
+        data: { email: `testadmin_${Date.now()}@example.com`, name: "Admin", platformRole: "SUPER_ADMIN", status: "ACTIVE" }
       });
-      admin = { id: u.id, email: u.email, role: u.role };
+      admin = { id: u.id, email: u.email, platformRole: u.platformRole, emailVerified: true, status: u.status };
 
       const org = await db.organization.create({
-        data: { name: "Test Org", slug: "test-org-" + Date.now(), status: "APPROVED" }
+        data: { name: "Test Org", slug: "test-org-" + Date.now(), status: "ACTIVE" }
       });
       orgId = org.id;
 

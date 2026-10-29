@@ -1,9 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
 import { apiFetch } from "@/lib/api-client";
-import { LoadingState, ErrorState, EmptyState } from "@/components/shared/states";
+import { LoadingState, ErrorState } from "@/components/shared/states";
+import { 
+  Laptop, 
+  Smartphone, 
+  Monitor, 
+  Globe, 
+  ShieldCheck, 
+  Clock, 
+  Trash2, 
+  AlertTriangle,
+  CheckCircle2
+} from "lucide-react";
 
 interface Session {
   id: string;
@@ -37,6 +47,7 @@ export default function SessionsSettingsPage() {
   }, []);
 
   const handleRevoke = async (id: string) => {
+    if (!confirm("Are you sure you want to log out this device?")) return;
     try {
       setRevoking(id);
       await apiFetch(`/auth/sessions/${id}`, { method: "DELETE" });
@@ -49,49 +60,126 @@ export default function SessionsSettingsPage() {
     }
   };
 
-  if (loading) return <LoadingState message="Loading sessions..." />;
+  const getDeviceIcon = (userAgent?: string) => {
+    if (!userAgent) return Laptop;
+    const ua = userAgent.toLowerCase();
+    if (ua.includes("mobile") || ua.includes("iphone") || ua.includes("android")) {
+      return Smartphone;
+    }
+    if (ua.includes("macintosh") || ua.includes("mac os") || ua.includes("windows") || ua.includes("linux")) {
+      return Laptop;
+    }
+    return Monitor;
+  };
+
+  const getDeviceTitle = (userAgent?: string) => {
+    if (!userAgent) return "Unknown Browser & Device";
+    let browser = "Browser";
+    if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) browser = "Chrome";
+    else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) browser = "Safari";
+    else if (userAgent.includes("Firefox")) browser = "Firefox";
+    else if (userAgent.includes("Edg")) browser = "Edge";
+
+    let os = "Device";
+    if (userAgent.includes("Mac OS")) os = "macOS";
+    else if (userAgent.includes("Windows")) os = "Windows";
+    else if (userAgent.includes("Linux")) os = "Linux";
+    else if (userAgent.includes("Android")) os = "Android";
+    else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) os = "iOS";
+
+    return `${browser} on ${os}`;
+  };
+
+  if (loading) return <LoadingState message="Loading active sessions..." />;
   if (error) return <ErrorState message={error.message} onRetry={fetchSessions} />;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold font-display">Active Sessions</h2>
-        <p className="text-sm text-[var(--text-secondary)]">Manage devices that are currently logged into your account.</p>
+    <div className="space-y-6 max-w-3xl font-sans">
+      <div className="pb-4 border-b border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-[var(--text-primary)] flex items-center gap-2.5">
+            <Laptop size={20} className="text-[#F97316]" />
+            Active Device Sessions ({sessions.length})
+          </h2>
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+            Devices that are currently logged in with your Nexora credentials.
+          </p>
+        </div>
       </div>
 
       {sessions.length === 0 ? (
-        <EmptyState title="No active sessions" message="You don't have any active sessions." />
+        <div className="text-center py-12 border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg-canvas)]/40 space-y-2">
+          <ShieldCheck size={28} className="mx-auto text-[var(--text-secondary)] opacity-50" />
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            No active sessions found
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {sessions.map((session) => (
-            <div key={session.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{session.userAgent || "Unknown Device"}</h3>
-                  {session.isCurrent && (
-                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-wider">
-                      Current
-                    </span>
-                  )}
+          {sessions.map((session) => {
+            const Icon = getDeviceIcon(session.userAgent);
+            const title = getDeviceTitle(session.userAgent);
+
+            return (
+              <div
+                key={session.id}
+                className={`p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  session.isCurrent
+                    ? "bg-[var(--bg-canvas)] border-[#F97316]/40 shadow-xs"
+                    : "bg-[var(--bg-canvas)] border-[var(--border)] hover:border-[#F97316]/30"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                      session.isCurrent
+                        ? "bg-[#F97316]/10 border-[#F97316]/30 text-[#F97316]"
+                        : "bg-[var(--bg-elevated)] border-[var(--border)] text-[var(--text-secondary)]"
+                    }`}
+                  >
+                    <Icon size={20} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h3 className="text-sm font-bold text-[var(--text-primary)] font-display">
+                        {title}
+                      </h3>
+                      {session.isCurrent && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          This Device
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] flex-wrap">
+                      <span className="flex items-center gap-1 font-mono text-[11px]">
+                        <Globe size={11} className="text-[#F97316]" />
+                        <span>IP: {session.ip || "127.0.0.1"}</span>
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1 text-[11px]">
+                        <Clock size={11} />
+                        <span>Last active: {new Date(session.lastActive).toLocaleString()}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-[var(--text-secondary)] mt-1 space-x-3">
-                  <span>IP: {session.ip || "Unknown"}</span>
-                  <span>•</span>
-                  <span>Active: {new Date(session.lastActive).toLocaleString()}</span>
-                </div>
+
+                {!session.isCurrent && (
+                  <button
+                    onClick={() => handleRevoke(session.id)}
+                    disabled={revoking === session.id}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-rose-400 border border-rose-500/20 hover:bg-rose-500/10 hover:border-rose-500/40 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
+                  >
+                    <Trash2 size={13} />
+                    <span>{revoking === session.id ? "Revoking..." : "Revoke Access"}</span>
+                  </button>
+                )}
               </div>
-              
-              {!session.isCurrent && (
-                <button
-                  onClick={() => handleRevoke(session.id)}
-                  disabled={revoking === session.id}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                >
-                  {revoking === session.id ? "Revoking..." : "Revoke"}
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
